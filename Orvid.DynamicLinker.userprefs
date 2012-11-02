@@ -1,0 +1,22 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Orvid.Assembler.x86.IstructionGen/InstructionForm.cs">
+    <Files>
+      <File FileName="Orvid.Assembler.x86/x86Stream.cs" Line="67" Column="44" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/Main.cs" Line="13" Column="30" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/InstructionForm.cs" Line="241" Column="100" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/Instruction.cs" Line="372" Column="23" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/InstructionArgType.cs" Line="447" Column="88" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/Generator.cs" Line="1050" Column="14" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/x86.cpud" Line="818" Column="1" />
+      <File FileName="Orvid.CodeDom/CodeGenerators/CSharpCodeGenerator.cs" Line="97" Column="4" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
+    <Watch file="Orvid.Assembler.x86.IstructionGen/InstructionForm.cs" line="328" offsetX="497" offsetY="5232" expression="WriteOperations" liveUpdate="False" />
+    <Watch file="Orvid.Assembler.x86.IstructionGen/RawParser.cs" line="214" offsetX="1059" offsetY="3408" expression="toks" liveUpdate="False" />
+  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
+</Properties>

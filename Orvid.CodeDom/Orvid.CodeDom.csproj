@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6928EF5E-7C9B-40C0-81C5-19E205B91512}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Orvid.CodeDom</RootNamespace>
+    <AssemblyName>Orvid.CodeDom</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="CodeArgumentReferenceExpression.cs" />
+    <Compile Include="CodeArrayCreateExpression.cs" />
+    <Compile Include="CodeArrayIndexerExpression.cs" />
+    <Compile Include="CodeAssignStatement.cs" />
+    <Compile Include="CodeAttachEventStatement.cs" />
+    <Compile Include="CodeAttributeArgument.cs" />
+    <Compile Include="CodeAttributeArgumentCollection.cs" />
+    <Compile Include="CodeAttributeDeclaration.cs" />
+    <Compile Include="CodeAttributeDeclarationCollection.cs" />
+    <Compile Include="CodeBaseReferenceExpression.cs" />
+    <Compile Include="CodeBinaryOperatorExpression.cs" />
+    <Compile Include="CodeBinaryOperatorType.cs" />
+    <Compile Include="CodeCastExpression.cs" />
+    <Compile Include="CodeCatchClause.cs" />
+    <Compile Include="CodeCatchClauseCollection.cs" />
+    <Compile Include="CodeChecksumPragma.cs" />
+    <Compile Include="CodeComment.cs" />
+    <Compile Include="CodeCommentStatement.cs" />
+    <Compile Include="CodeCommentStatementCollection.cs" />
+    <Compile Include="CodeCompileUnit.cs" />
+    <Compile Include="CodeConditionStatement.cs" />
+    <Compile Include="CodeConstructor.cs" />
+    <Compile Include="CodeDefaultValueExpression.cs" />
+    <Compile Include="CodeDelegateCreateExpression.cs" />
+    <Compile Include="CodeDelegateInvokeExpression.cs" />
+    <Compile Include="CodeDirectionExpression.cs" />
+    <Compile Include="CodeDirective.cs" />
+    <Compile Include="CodeDirectiveCollection.cs" />
+    <Compile Include="CodeEntryPointMethod.cs" />
+    <Compile Include="CodeEventReferenceExpression.cs" />
+    <Compile Include="CodeExpression.cs" />
+    <Compile Include="CodeExpressionCollection.cs" />
+    <Compile Include="CodeExpressionStatement.cs" />
+    <Compile Include="CodeFieldReferenceExpression.cs" />
+    <Compile Include="CodeGotoStatement.cs" />
+    <Compile Include="CodeIndexerExpression.cs" />
+    <Compile Include="CodeIterationStatement.cs" />
+    <Compile Include="CodeLabeledStatement.cs" />
+    <Compile Include="CodeLinePragma.cs" />
+    <Compile Include="CodeMemberEvent.cs" />
+    <Compile Include="CodeMemberField.cs" />
+    <Compile Include="CodeMemberMethod.cs" />
+    <Compile Include="CodeMemberProperty.cs" />
+    <Compile Include="CodeMethodInvokeExpression.cs" />
+    <Compile Include="CodeMethodReferenceExpression.cs" />
+    <Compile Include="CodeMethodReturnStatement.cs" />
+    <Compile Include="CodeNamespace.cs" />
+    <Compile Include="CodeNamespaceCollection.cs" />
+    <Compile Include="CodeNamespaceImport.cs" />
+    <Compile Include="CodeNamespaceImportCollection.cs" />
+    <Compile Include="CodeObject.cs" />
+    <Compile Include="CodeObjectCreateExpression.cs" />
+    <Compile Include="CodeParameterDeclarationExpression.cs" />
+    <Compile Include="CodeParameterDeclarationExpressionCollection.cs" />
+    <Compile Include="CodePrimitiveExpression.cs" />
+    <Compile Include="CodePropertyReferenceExpression.cs" />
+    <Compile Include="CodePropertySetValueReferenceExpression.cs" />
+    <Compile Include="CodeRegionDirective.cs" />
+    <Compile Include="CodeRegionMode.cs" />
+    <Compile Include="CodeRemoveEventStatement.cs" />
+    <Compile Include="CodeSnippetCompileUnit.cs" />
+    <Compile Include="CodeSnippetExpression.cs" />
+    <Compile Include="CodeSnippetStatement.cs" />
+    <Compile Include="CodeSnippetTypeMember.cs" />
+    <Compile Include="CodeStatement.cs" />
+    <Compile Include="CodeStatementCollection.cs" />
+    <Compile Include="CodeThisReferenceExpression.cs" />
+    <Compile Include="CodeThrowExceptionStatement.cs" />
+    <Compile Include="CodeTryCatchFinallyStatement.cs" />
+    <Compile Include="CodeTypeConstructor.cs" />
+    <Compile Include="CodeTypeDeclaration.cs" />
+    <Compile Include="CodeTypeDeclarationCollection.cs" />
+    <Compile Include="CodeTypeDelegate.cs" />
+    <Compile Include="CodeTypeMember.cs" />
+    <Compile Include="CodeTypeMemberCollection.cs" />
+    <Compile Include="CodeTypeOfExpression.cs" />
+    <Compile Include="CodeTypeParameter.cs" />
+    <Compile Include="CodeTypeParameterCollection.cs" />
+    <Compile Include="CodeTypeReference.cs" />
+    <Compile Include="CodeTypeReferenceCollection.cs" />
+    <Compile Include="CodeTypeReferenceExpression.cs" />
+    <Compile Include="CodeTypeReferenceOptions.cs" />
+    <Compile Include="CodeVariableDeclarationStatement.cs" />
+    <Compile Include="CodeVariableReferenceExpression.cs" />
+    <Compile Include="FieldDirection.cs" />
+    <Compile Include="ICodeDomVisitor.cs" />
+    <Compile Include="MemberAttributes.cs" />
+    <Compile Include="Compiler\CodeGenerator.cs" />
+    <Compile Include="Compiler\CodeGeneratorOptions.cs" />
+    <Compile Include="Compiler\GeneratedCodeAttribute.cs" />
+    <Compile Include="Compiler\GeneratorSupport.cs" />
+    <Compile Include="Compiler\ICodeGenerator.cs" />
+    <Compile Include="Compiler\IndentedTextWriter.cs" />
+    <Compile Include="CodeGenerators\CSharpCodeGenerator.cs" />
+    <Compile Include="CodeBreakStatement.cs" />
+    <Compile Include="CodeCaseStatement.cs" />
+    <Compile Include="CodeCaseStatementCollection.cs" />
+    <Compile Include="CodeDefaultCaseStatement.cs" />
+    <Compile Include="CodeSwitchStatement.cs" />
+    <Compile Include="CodeScopeStatement.cs" />
+    <Compile Include="CodeDocumentationNode.cs" />
+    <Compile Include="CodeDocumentationSummaryNode.cs" />
+    <Compile Include="CodeDocumentationParameterNode.cs" />
+    <Compile Include="CodeDocumentationReturnNode.cs" />
+    <Compile Include="CodeDocumentationNodeCollection.cs" />
+    <Compile Include="CodeGenerators\DCodeGenerator.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Compiler\" />
+    <Folder Include="CodeGenerators\" />
+  </ItemGroup>
+</Project>

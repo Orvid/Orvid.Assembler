@@ -1,0 +1,2507 @@
+cpu x86
+// This file describes instructions on an x86 CPU
+// The actual format is slightly convoluted, but it
+// is able to describe every single instruction in
+// the x86 instruction set in 1 line per instruction.
+// Also, for readability's sake, please keep 1 empty
+// line in between different instructions, and 5 empty
+// lines both above, and below the label for the op-code
+// group. (aka. SSE, SSE2 etc.) Within an op-code group, 
+// try to keep the instructions in alphabetical order. 
+// (nothing>numbers>letters)
+
+namespace Orvid.Assembler.x86
+
+#register Type x86Stream
+#register Type x86Instruction
+#register Type x86Assembler
+#register Type x86Segment          seg_
+#register Type x86Register         reg_
+#register Type x86IndexShift       indexShift_
+#register Type x86ControlRegister  creg_
+#register Type x86DebugRegister    dreg_
+#register Type x86FPURegister      fpreg_
+
+#define InstructionFormClass   x86InstructionForm
+
+#define StreamClass            x86Stream
+#define InstructionClass       x86Instruction
+#define AssemblerClass         x86Assembler
+#define PrefixClass            x86Prefix
+
+#define Enum x86IndexShift byte
+{
+	Mul1,
+	Mul2,
+	Mul4,
+	Mul8,
+}
+
+#define Enum x86Register byte
+{
+	EAX,
+	ECX,
+	EDX,
+	EBX,
+	ESP,
+	EBP,
+	ESI,
+	EDI,
+	None,
+}
+
+#define Enum x86FPURegister byte 
+{
+	ST0,
+	ST1,
+	ST2,
+	ST3,
+	ST4,
+	ST5,
+	ST6,
+	ST7,
+}
+
+#define Segment                x86Segment
+{
+	ES,
+	CS,
+	SS,
+	DS,
+	FS,
+	GS
+}
+
+// These are the registers it's valid to use in a
+// compare operation in an override condition.
+//#define Register               x86Register
+//{
+//	AL,
+//	AX,
+//	EAX
+//}
+
+#register Prefix  OpSz  OperandSizeOverride
+#register Prefix  AdSz  AddressSizeOverride
+
+#register DocAlias     Common           "The {argName}"
+#register DocAlias     Register         "${Common} register."
+#register DocAlias     SegmentRegister  "${Common} segment register."
+#register DocAlias     ControlRegister  "${Common} control register."
+#register DocAlias     DebugRegister    "${Common} debug register."
+#register DocAlias     FPURegister      "${Common} fpu register."
+#register DocAlias     Address          "${Common} address."
+#register DocAlias     BaseRegister     "${Common} base register."
+#register DocAlias     Offset           "${Common} offset."
+#register DocAlias     Displacement     "${Common} displacement."
+#register DocAlias     IndexRegister    "${Common} index register."
+#register DocAlias     IndexShift       "${Common} index shift."
+
+
+#register SizelessType R
+#register SizelessType TrueMem
+#register SizelessType Membase
+#register SizelessType MemIndex
+#register SizelessType ModMem
+#register SizelessType ModReg
+#register SizelessType RM
+#register SizelessType Mem
+#register SizelessType ControlReg
+#register SizelessType DebugReg
+#register SizelessType SegReg
+#register SizelessType FPUReg
+
+
+#define arg(CReg, , ControlReg, ) as x86ControlRegister(Register, DocAlias(ControlRegister))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameControlRegister(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(DReg, , DebugReg, ) as x86DebugRegister(Register, DocAlias(DebugRegister))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameDebugRegister(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(SReg, , SegReg, ) as x86Segment(Register, DocAlias(SegmentRegister))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameSegment(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(FPUReg, , FPUReg, ) as x86FPURegister(Register, DocAlias(FPURegister))
+{
+	Read  NamingHelper.NameFPURegister(Register)
+	AsArg DirectCast(Register, byte)
+}
+#define ArgAlias sti FPUReg
+
+
+#define arg(R8, , R, ) as x86Register(Register, DocAlias(Register))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameRegister(Register, 1)
+	AsArg DirectCast(Register, byte)
+	Size  1
+}
+
+#define arg(R16, , R, ) as x86Register(Register, DocAlias(Register))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameRegister(Register, 2)
+	AsArg DirectCast(Register, byte)
+	Size  2
+}
+
+#define arg(R32, , R, ) as x86Register(Register, DocAlias(Register))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameRegister(Register, 4)
+	AsArg DirectCast(Register, byte)
+	Size  4
+}
+
+#define arg(ModReg8, R8, ModReg, R) as x86Register(Register, DocAlias(Register))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameRegister(Register, 1)
+	AsArg DirectCast(Register, byte)
+	Size  1
+}
+
+#define arg(ModReg16, R16, ModReg, R) as x86Register(Register, DocAlias(Register))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameRegister(Register, 2)
+	AsArg DirectCast(Register, byte)
+	Size  2
+}
+
+#define arg(ModReg32, R32, ModReg, R) as x86Register(Register, DocAlias(Register))
+{
+	Write Stream.WriteRegister(arg1, Register)
+	Read  NamingHelper.NameRegister(Register, 4)
+	AsArg DirectCast(Register, byte)
+	Size  4
+}
+
+#define arg(TrueMem8, , TrueMem, ) as UInt(Address, DocAlias(Address))
+{
+	Read NamingHelper.NameMem(ParentAssembler, Address, Segment)
+	RequiresSeg
+	Size 1
+}
+#define arg(TrueMem16)  : TrueMem8( 2)
+#define arg(TrueMem32)  : TrueMem8( 4)
+#define arg(TrueMem64)  : TrueMem8( 8)
+#define arg(TrueMem80)  : TrueMem8(10)
+#define arg(TrueMem128) : TrueMem8(16)
+
+
+#define arg(ModMem8, Mem8, ModMem, TrueMem) as UInt(Address, DocAlias(Address))
+{
+	Write Stream.WriteMem(arg1, Address)
+	Read  NamingHelper.NameMem(ParentAssembler, Address, Segment)
+	RequiresSeg
+	Size  1
+}
+#define arg(ModMem16,  Mem16)  : ModMem8( 2)
+#define arg(ModMem32,  Mem32)  : ModMem8( 4)
+#define arg(ModMem64,  Mem64)  : ModMem8( 8)
+#define arg(ModMem80,  Mem80)  : ModMem8(10)
+#define arg(ModMem128, Mem128) : ModMem8(16)
+
+
+#define arg(Membase8, , Membase, ) as x86Register(BaseRegister, DocAlias(BaseRegister)), Int(Offset, DocAlias(Offset))
+{
+	Write Stream.WriteMembase(arg1, BaseRegister, Offset)
+	Read  NamingHelper.NameMembase(BaseRegister, Offset)
+	RequiresSeg
+	Size  1
+}
+#define arg(Membase16)  : Membase8( 2)
+#define arg(Membase32)  : Membase8( 4)
+#define arg(Membase64)  : Membase8( 8)
+#define arg(Membase80)  : Membase8(10)
+#define arg(Membase128) : Membase8(16)
+
+
+#define arg(MemIndex8, , MemIndex, ) as x86Register(BaseRegister, DocAlias(BaseRegister)), Int(Displacement, DocAlias(Displacement)), x86Register(IndexRegister, DocAlias(IndexRegister)), x86IndexShift(Shift, DocAlias(IndexShift))
+{
+	Write Stream.WriteMemIndex(arg1, BaseRegister, Displacement, IndexRegister, Shift)
+	Read  NamingHelper.NameMemIndex(ParentAssembler, BaseRegister, Displacement, IndexRegister, Shift, Segment)
+	RequiresSeg
+	Size  1
+}
+#define arg(MemIndex16)  : MemIndex8( 2)
+#define arg(MemIndex32)  : MemIndex8( 4)
+#define arg(MemIndex64)  : MemIndex8( 8)
+#define arg(MemIndex80)  : MemIndex8(10)
+#define arg(MemIndex128) : MemIndex8(16)
+
+
+#define arg(r/m8, RM8, RM, ) as Invalid
+{
+	Expand
+	{
+		ModReg8,
+		ModMem8,
+		Membase8,
+		MemIndex8
+	}
+}
+
+#define arg(r/m16, RM16, RM, ) as Invalid
+{
+	Expand
+	{
+		ModReg16,
+		ModMem16,
+		Membase16,
+		MemIndex16
+	}
+}
+
+#define arg(r/m32, RM32, RM, ) as Invalid
+{
+	Expand
+	{
+		ModReg32,
+		ModMem32,
+		Membase32,
+		MemIndex32
+	}
+}
+
+#define arg(Mem8, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem8,
+		Membase8,
+		MemIndex8
+	}
+}
+
+#define arg(Mem16, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem16,
+		Membase16,
+		MemIndex16
+	}
+}
+
+#define arg(Mem32, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem32,
+		Membase32,
+		MemIndex32
+	}
+}
+
+#define arg(Mem64, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem64,
+		Membase64,
+		MemIndex64
+	}
+}
+
+#define arg(Mem80, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem80,
+		Membase80,
+		MemIndex80
+	}
+}
+
+#define arg(Mem128, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem128,
+		Membase128,
+		MemIndex128
+	}
+}
+
+#define arg(MemF32, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem32,
+		Membase32,
+		MemIndex32
+	}
+}
+
+#define arg(MemF64, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem64,
+		Membase64,
+		MemIndex64
+	}
+}
+
+#define arg(MemF80, , Mem, ) as Invalid
+{
+	Expand
+	{
+		ModMem80,
+		Membase80,
+		MemIndex80
+	}
+}
+
+
+///// Fun Fact: This is a commented out documentation comment.
+///// (I realized the flaw of not being able to comment out the
+///// documentation when I went to find out how large the code Jcc
+///// generates is)
+
+
+/// <summary>
+/// ASCII Adjust AL after addition.
+/// </summary>
+AAA 0                        (0x37)      NONE aaa
+
+/// <summary>
+/// ASCII Adjust AX after division.
+/// </summary>
+AAD 1 imm8(numBase=10){d}    (0xD5 arg1) NONE aad(arg1!=10)
+
+/// <summary>
+/// ASCII Adjust AX after multiplication.
+/// </summary>
+AAM 1 imm8(numBase=10){d}    (0xD4 arg1) NONE aam(arg1!=10)
+
+/// <summary>
+/// ASCII Adjust AL after subtraction.
+/// </summary>
+AAS 0                        (0x3F)      NONE aas
+
+/// <summary>
+/// Add with carry.
+/// </summary>
+Adc 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x02] arg2)      DS   adc
+Adc 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x02] arg2) DS   adc
+Adc 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x02] arg2)      DS   adc
+Adc 2 r8(destination),     r/m8(source)      (0x12 arg2[arg1])           DS   adc
+Adc 2 r16(destination),    r/m16(source)     (OpSz 0x13 arg2[arg1])      DS   adc
+Adc 2 r32(destination),    r/m32(source)     (0x13 arg2[arg1])           DS   adc
+Adc 2 r/m8(destination),   r8(source)        (0x10 arg1[arg2])           DS   adc
+Adc 2 r/m16(destination),  r16(source)       (OpSz 0x11 arg1[arg2])      DS   adc
+Adc 2 r/m32(destination),  r32(source)       (0x11 arg1[arg2])           DS   adc
+Adc 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x02] arg2) DS   adc   override([r/m16 imm16] fits[arg2] emitonly)
+Adc 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x02] arg2)      DS   adc   override([r/m32 imm32] fits[arg2] emitonly)
+Adc 2 r8(destination),     imm8(imm)         (0x14 arg2)                 NONE adc   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Adc 2 r16(destination),    imm16(imm)        (OpSz 0x15 arg2)            NONE adc   override([r16   imm16] comp[arg1=AX]  emitonly)
+Adc 2 r32(destination),    imm32(imm)        (0x15 arg2)                 NONE adc   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Add.
+/// </summary>
+Add 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x00] arg2)      DS   add
+Add 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x00] arg2) DS   add
+Add 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x00] arg2)      DS   add
+Add 2 r/m8(destination),   r8(source)        (0x00 arg1[arg2])           DS   add
+Add 2 r/m16(destination),  r16(source)       (OpSz 0x01 arg1[arg2])      DS   add
+Add 2 r/m32(destination),  r32(source)       (0x01 arg1[arg2])           DS   add
+Add 2 r8(destination),     r/m8(source)      (0x02 arg2[arg1])           DS   add
+Add 2 r16(destination),    r/m16(source)     (OpSz 0x03 arg2[arg1])      DS   add
+Add 2 r32(description),    r/m32(source)     (0x03 arg2[arg1])           DS   add
+Add 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x00] arg2) DS   add   override([r/m16 imm16] fits[arg2] emitonly)
+Add 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x00] arg2)      DS   add   override([r/m32 imm32] fits[arg2] emitonly)
+Add 2 r8(destination),     imm8(imm)         (0x04 arg2)                 NONE add   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Add 2 r16(destination),    imm16(imm)        (OpSz 0x05 arg2)            NONE add   override([r16   imm16] comp[arg1=AX]  emitonly)
+Add 2 r32(destination),    imm32(imm)        (0x05 arg2)                 NONE add   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Logical AND.
+/// </summary>
+And 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x04] arg2)      DS   and
+And 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x04] arg2) DS   and
+And 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x04] arg2)      DS   and
+And 2 r/m8(destination),   r8(source)        (0x20 arg1[arg2])           DS   and
+And 2 r/m16(destination),  r16(source)       (OpSz 0x21 arg1[arg2])      DS   and
+And 2 r/m32(destination),  r32(source)       (0x21 arg1[arg2])           DS   and
+And 2 r8(destination),     r/m8(source)      (0x22 arg2[arg1])           DS   and
+And 2 r16(destination),    r/m16(source)     (OpSz 0x23 arg2[arg1])      DS   and
+And 2 r32(destination),    r/m32(source)     (0x23 arg2[arg1])           DS   and
+And 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x04] arg2) DS   and   override([r/m16 imm16] fits[arg2] emitonly)
+And 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x04] arg2)      DS   and   override([r/m32 imm32] fits[arg2] emitonly)
+And 2 r8(destination),     imm8(imm)         (0x24 arg2)                 DS   and   override([r8    imm8]  comp[arg1=AL]  emitonly)
+And 2 r16(destination),    imm16(imm)        (OpSz 0x25 arg2)            DS   and   override([r16   imm16] comp[arg1=AX]  emitonly)
+And 2 r32(destination),    imm32(imm)        (0x25 arg2)                 DS   and   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Adjust RPL field of segment selector.
+/// </summary>
+ARPL 2 r/m16(destination), r16(source)       (0x63 arg1[arg2])           DS   arpl
+
+//Bound 2 r16
+//Bound 2 r32
+
+/// <summary>
+/// Bit scan forward.
+/// </summary>
+BSF 2 r16(destination),    r/m16(source)     (OpSz 0x0F 0xBC arg2[arg1]) DS   bsf
+BSF 2 r32(destination),    r/m32(source)     (0x0F 0xBC arg2[arg1])      DS   bsf
+
+/// <summary>
+/// Bit scan reverse.
+/// </summary>
+BSR 2 r16(destination),    r/m16(source)     (OpSz 0x0F 0xBD arg2[arg1]) DS   bsr
+BSR 2 r32(destination),    r/m32(source)     (0x0F 0xBD arg2[arg1])      DS   bsr
+
+/// <summary>
+/// Reverse the byte order of a 32-bit register. (endian conversions)
+/// </summary>
+BSwap 1 r32(the)                             (0x0F 0xC8+arg1)            NONE bswap
+
+/// <summary>
+/// Bit test.
+/// </summary>
+BT  2 r/m16(value),        r16(bitNum)       (OpSz 0x0F 0xA3 arg1[arg2]) DS   bt
+BT  2 r/m32(value),        r32(bitNum)       (0x0F 0xA3 arg1[arg2])      DS   bt
+BT  2 r/m16(value),        imm8(bitNum)      (OpSz 0x0F 0xBA arg1[0x04] arg2) DS   bt
+BT  2 r/m32(value),        imm8(bitNum)      (0x0F 0xBA arg1[0x04] arg2)      DS   bt
+
+/// <summary>
+/// Bit test and compliment.
+/// </summary>
+BTC 2 r/m16(value),        r16(bitNum)       (OpSz 0x0F 0xBB arg1[arg2]) DS   btc
+BTC 2 r/m32(value),        r32(bitNum)       (0x0F 0xBB arg1[arg2])      DS   btc
+BTC 2 r/m16(value),        imm8(bitNum)      (OpSz 0x0F 0xBA arg1[0x07] arg2) DS   btc
+BTC 2 r/m32(value),        imm8(bitNum)      (0x0F 0xBA arg1[0x07] arg2)      DS   btc
+
+/// <summary>
+/// Bit test and reset.
+/// </summary>
+BTR 2 r/m16(value),        r16(bitNum)       (OpSz 0x0F 0xB3 arg1[arg2]) DS   btr
+BTR 2 r/m32(value),        r32(bitNum)       (0x0F 0xB3 arg1[arg2])      DS   btr
+BTR 2 r/m16(value),        imm8(bitNum)      (OpSz 0x0F 0xBA arg1[0x06] arg2) DS   btr
+BTR 2 r/m32(value),        imm8(bitNum)      (0x0F 0xBA arg1[0x06] arg2)      DS   btr
+
+/// <summary>
+/// Bit test and set.
+/// </summary>
+BTS 2 r/m16(value),        r16(bitNum)       (OpSz 0x0F 0xAB arg1[arg2]) DS   bts
+BTS 2 r/m32(value),        r32(bitNum)       (0x0F 0xAB arg1[arg2])      DS   bts
+BTS 2 r/m16(value),        imm8(bitNum)      (OpSz 0x0F 0xBA arg1[0x05] arg2) DS   bts
+BTS 2 r/m32(value),        imm8(bitNum)      (0x0F 0xBA arg1[0x05] arg2)      DS   bts
+
+/// <summary>
+/// Signed convert byte to word.
+/// </summary>
+Cbw 0                                        (OpSz 0x98)                 NONE cbw
+
+/// <summary>
+/// Unsigned convert word to double-word.
+/// </summary>
+Cdq 0                                        (0x99)                      NONE cdq
+
+/// <summary>
+/// Clear carry flag.
+/// </summary>
+Clc 0                                        (0xF8)                      NONE clc
+
+/// <summary>
+/// Clear direction flag.
+/// </summary>
+Cld 0                                        (0xFC)                      NONE cld
+
+/// <summary>
+/// Flush cache line.
+/// </summary>
+ClFlush 1 mem8(address)                      (0x0F 0xAE arg1[0x07])      DS   clflush
+
+/// <summary>
+/// Clear interrupt flag.
+/// </summary>
+Cli 0                                        (0xFA)                      NONE cli
+
+/// <summary>
+/// Clear task-switched flag in CR0.
+/// </summary>
+Clts 0                                       (0x0F 0x06)                 NONE clts
+
+/// <summary>
+/// Compliment carry flag.
+/// </summary>
+Cmc 0                                        (0xF5)                      NONE cmc
+
+// This would idealy all be one op-code, but the current framework doesn't 
+// allow them to be properly combined into one. (mostly due to string generation, 
+// although the write operation would have a few issues as well.
+/// <summary>
+/// Move if above.
+/// </summary>
+CMovA   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x47 arg2[arg1]) DS   cmova
+CMovA   2 r32(destination), r/m32(source)    (0x0F 0x47 arg2[arg1])      DS   cmova
+/// <summary>
+/// Move if above or equal.
+/// </summary>
+CMovAE  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x43 arg2[arg1]) DS   cmovae
+CMovAE  2 r32(destination), r/m32(source)    (0x0F 0x43 arg2[arg1])      DS   cmovae
+/// <summary>
+/// Move if below.
+/// </summary>
+CMovB   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x42 arg2[arg1]) DS   cmovb
+CMovB   2 r32(destination), r/m32(source)    (0x0F 0x42 arg2[arg1])      DS   cmovb
+/// <summary>
+/// Move if below or equal.
+/// </summary>
+CMovBE  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x46 arg2[arg1]) DS   cmovbe
+CMovBE  2 r32(destination), r/m32(source)    (0x0F 0x46 arg2[arg1])      DS   cmovbe
+/// <summary>
+/// Move if carry.
+/// </summary>
+CMovC   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x42 arg2[arg1]) DS   cmovc
+CMovC   2 r32(destination), r/m32(source)    (0x0F 0x42 arg2[arg1])      DS   cmovc
+/// <summary>
+/// Move if equal.
+/// </summary>
+CMovE   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x44 arg2[arg1]) DS   cmove
+CMovE   2 r32(destination), r/m32(source)    (0x0F 0x44 arg2[arg1])      DS   cmove
+/// <summary>
+/// Move if greater.
+/// </summary>
+CMovG   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4F arg2[arg1]) DS   cmovg
+CMovG   2 r32(destination), r/m32(source)    (0x0F 0x4F arg2[arg1])      DS   cmovg
+/// <summary>
+/// Move if greater or equal.
+/// </summary>
+CMovGE  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4D arg2[arg1]) DS   cmovge
+CMovGE  2 r32(destination), r/m32(source)    (0x0F 0x4D arg2[arg1])      DS   cmovge
+/// <summary>
+/// Move if less.
+/// </summary>
+CMovL   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4C arg2[arg1]) DS   cmovl
+CMovL   2 r32(destination), r/m32(source)    (0x0F 0x4C arg2[arg1])      DS   cmovl
+/// <summary>
+/// Move if less or equal.
+/// </summary>
+CMovLE  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4E arg2[arg1]) DS   cmovle
+CMovLE  2 r32(destination), r/m32(source)    (0x0F 0x4E arg2[arg1])      DS   cmovle
+/// <summary>
+/// Move if not above.
+/// </summary>
+CMovNA  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x46 arg2[arg1]) DS   cmovna
+CMovNA  2 r32(destination), r/m32(source)    (0x0F 0x46 arg2[arg1])      DS   cmovna
+/// <summary>
+/// Move if not above or equal.
+/// </summary>
+CMovNAE 2 r16(destination), r/m16(source)    (OpSz 0x0F 0x42 arg2[arg1]) DS   cmovnae
+CMovNAE 2 r32(destination), r/m32(source)    (0x0F 0x42 arg2[arg1])      DS   cmovnae
+/// <summary>
+/// Move if not below.
+/// </summary>
+CMovNB  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x43 arg2[arg1]) DS   cmovnb
+CMovNB  2 r32(destination), r/m32(source)    (0x0F 0x43 arg2[arg1])      DS   cmovnb
+/// <summary>
+/// Move if not below or equal.
+/// </summary>
+CMovNBE 2 r16(destination), r/m16(source)    (OpSz 0x0F 0x47 arg2[arg1]) DS   cmovnbe
+CMovNBE 2 r32(destination), r/m32(source)    (0x0F 0x47 arg2[arg1])      DS   cmovnbe
+/// <summary>
+/// Move if not carry.
+/// </summary>
+CMovNC  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x43 arg2[arg1]) DS   cmovnc
+CMovNC  2 r32(destination), r/m32(source)    (0x0F 0x43 arg2[arg1])      DS   cmovnc
+/// <summary>
+/// Move if not equal.
+/// </summary>
+CMovNE  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x45 arg2[arg1]) DS   cmovne
+CMovNE  2 r32(destination), r/m32(source)    (0x0F 0x45 arg2[arg1])      DS   cmovne
+/// <summary>
+/// Move if not greater.
+/// </summary>
+CMovNG  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4E arg2[arg1]) DS   cmovng
+CMovNG  2 r32(destination), r/m32(source)    (0x0F 0x4E arg2[arg1])      DS   cmovng
+/// <summary>
+/// Move if not greater or equal.
+/// </summary>
+CMovNGE 2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4C arg2[arg1]) DS   cmovnge
+CMovNGE 2 r32(destination), r/m32(source)    (0x0F 0x4C arg2[arg1])      DS   cmovnge
+/// <summary>
+/// Move if not less.
+/// </summary>
+CMovNL  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4D arg2[arg1]) DS   cmovnl
+CMovNL  2 r32(destination), r/m32(source)    (0x0F 0x4D arg2[arg1])      DS   cmovnl
+/// <summary>
+/// Move if not less or equal.
+/// </summary>
+CMovNLE 2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4F arg2[arg1]) DS   cmovnle
+CMovNLE 2 r32(destination), r/m32(source)    (0x0F 0x4F arg2[arg1])      DS   cmovnle
+/// <summary>
+/// Move if not overflow.
+/// </summary>
+CMovNO  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x41 arg2[arg1]) DS   cmovno
+CMovNO  2 r32(destination), r/m32(source)    (0x0F 0x41 arg2[arg1])      DS   cmovno
+/// <summary>
+/// Move if not parity.
+/// </summary>
+CMovNP  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4B arg2[arg1]) DS   cmovnp
+CMovNP  2 r32(destination), r/m32(source)    (0x0F 0x4B arg2[arg1])      DS   cmovnp
+/// <summary>
+/// Move if not sign.
+/// </summary>
+CMovNS  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x49 arg2[arg1]) DS   cmovns
+CMovNS  2 r32(destination), r/m32(source)    (0x0F 0x49 arg2[arg1])      DS   cmovns
+/// <summary>
+/// Move if not zero.
+/// </summary>
+CMovNZ  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x45 arg2[arg1]) DS   cmovnz
+CMovNZ  2 r32(destination), r/m32(source)    (0x0F 0x45 arg2[arg1])      DS   cmovnz
+/// <summary>
+/// Move if overflow.
+/// </summary>
+CMovO   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x40 arg2[arg1]) DS   cmovo
+CMovO   2 r32(destination), r/m32(source)    (0x0F 0x40 arg2[arg1])      DS   cmovo
+/// <summary>
+/// Move if parity.
+/// </summary>
+CMovP   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4A arg2[arg1]) DS   cmovp
+CMovP   2 r32(destination), r/m32(source)    (0x0F 0x4A arg2[arg1])      DS   cmovp
+/// <summary>
+/// Move if parity even.
+/// </summary>
+CMovPE  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4A arg2[arg1]) DS   cmovpe
+CMovPE  2 r32(destination), r/m32(source)    (0x0F 0x4A arg2[arg1])      DS   cmovpe
+/// <summary>
+/// Move if parity odd.
+/// </summary>
+CMovPO  2 r16(destination), r/m16(source)    (OpSz 0x0F 0x4B arg2[arg1]) DS   cmovpo
+CMovPO  2 r32(destination), r/m32(source)    (0x0F 0x4B arg2[arg1])      DS   cmovpo
+/// <summary>
+/// Move if sign.
+/// </summary>
+CMovS   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x48 arg2[arg1]) DS   cmovs
+CMovS   2 r32(destination), r/m32(source)    (0x0F 0x48 arg2[arg1])      DS   cmovs
+/// <summary>
+/// Move if zero.
+/// </summary>
+CMovZ   2 r16(destination), r/m16(source)    (OpSz 0x0F 0x44 arg2[arg1]) DS   cmovz
+CMovZ   2 r32(destination), r/m32(source)    (0x0F 0x44 arg2[arg1])      DS   cmovz
+
+/// <summary>
+/// Compare 2 operands.
+/// </summary>
+Cmp 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x07] arg2)      DS   cmp
+Cmp 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x07] arg2) DS   cmp
+Cmp 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x07] arg2)      DS   cmp
+Cmp 2 r/m8(destination),   r8(source)        (0x38 arg1[arg2])           DS   cmp
+Cmp 2 r/m16(destination),  r16(source)       (OpSz 0x39 arg1[arg2])      DS   cmp
+Cmp 2 r/m32(destination),  r32(source)       (0x39 arg1[arg2])           DS   cmp
+Cmp 2 r8(destination),     r/m8(source)      (0x3A arg2[arg1])           DS   cmp
+Cmp 2 r16(destination),    r/m16(source)     (OpSz 0x3B arg2[arg1])      DS   cmp
+Cmp 2 r32(destination),    r/m32(source)     (0x3B arg2[arg1])           DS   cmp
+Cmp 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x07] arg2) DS   cmp   override([r/m16 imm16] fits[arg2] emitonly)
+Cmp 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x07] arg2)      DS   cmp   override([r/m32 imm32] fits[arg2] emitonly)
+Cmp 2 r8(destination),     imm8(imm)         (0x3C arg2)                 DS   cmp   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Cmp 2 r16(destination),    imm16(imm)        (OpSz 0x3D arg2)            DS   cmp   override([r16   imm16] comp[arg1=AX]  emitonly)
+Cmp 2 r32(destination),    imm32(imm)        (0x3D arg2)                 DS   cmp   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+//CmpS
+//CmpSB
+//CmpSW
+//CmpSD
+
+/// <summary>
+/// Compare and exchange.
+/// </summary>
+CmpXChg 2 r/m8(destination),  r8(source)     (0x0F 0xB0 arg1[arg2])      DS   cmpxchg
+CmpXChg 2 r/m16(destination), r16(source)    (OpSz 0x0F 0xB1 arg1[arg2]) DS   cmpxchg
+CmpXChg 2 r/m32(destination), r32(source)    (0x0F 0xB1 arg1[arg2])      DS   cmpxchg
+
+//CmpXChg8B 1 mem64(value)                   [0x01]  (0x0F 0xC7 MRSB)      DS   cmpxchg8b
+
+/// <summary>
+/// CPU Identification.
+/// </summary>
+CpuID 0       (0x0F 0xA2)      NONE cpuid
+
+/// <summary>
+/// Accumulate CRC32 value.
+/// </summary>
+Crc32 2 r32(destination),  r/m8(source)      (0xF2 0x0F 0x38 0xF0 arg2[arg1])       DS crc32
+Crc32 2 r32(destination),  r/m16(source)     (OpSz 0xF2 0x0F 0x38 0xF1 arg2[arg1])  DS crc32
+Crc32 2 r32(destination),  r/m32(source)     (0xF2 0x0F 0x38 0xF1 arg2[arg1])       DS crc32
+
+/// <summary>
+/// Unsigned convert word to double word.
+/// </summary>
+Cwd 0         (OpSz 0x99) NONE cwd
+
+/// <summary>
+/// Signed convert word to double word.
+/// </summary>
+Cwde 0        (0x98)      NONE cwde
+
+/// <summary>
+/// Decimal adjust AL after addition.
+/// </summary>
+DAA 0         (0x27)      NONE daa
+
+/// <summary>
+/// Decimal adjust AL after subtraction.
+/// </summary>
+DAS 0         (0x2F)      NONE das
+
+/// <summary>
+/// Decrement by 1.
+/// </summary>
+Dec 1 r/m8(value)                            (0xFE arg1[0x01])           DS   dec
+Dec 1 r/m16(value)                           (OpSz 0xFF arg1[0x01])      DS   dec
+Dec 1 r/m32(value)                           (0xFF arg1[0x01])           DS   dec
+Dec 1 r16(value)                             (OpSz 0x48+arg1)            NONE dec   override(exact)
+Dec 1 r32(value)                             (0x48+arg1)                 NONE dec   override(exact)
+
+/// <summary>
+/// Unsigned divide.
+/// </summary>
+Div 1 r/m8(value)                            (0xF6 arg1[0x06])           DS   div
+Div 1 r/m16(value)                           (OpSz 0xF7 arg1[0x06])      DS   div
+Div 1 r/m32(value)                           (0xF7 arg1[0x06])           DS   div
+
+/// <summary>
+/// Empty MMX technology state.
+/// </summary>
+Emms 0        (0x0F 0x77)      NONE emms
+
+/// <summary>
+/// Make stack frame for procedure
+/// parameters.
+/// </summary>
+Enter 2 imm16(size),    imm8(lexicalDepth=0){d}       (0xC8 arg1 arg2)      DS   enter
+
+/// <summary>
+/// Halt.
+/// </summary>
+Hlt 0         (0xF4)           NONE hlt
+
+/// <summary>
+/// Signed divide.
+/// </summary>
+IDiv 1 r/m8(value)                           (0xF6 arg1[0x07])           DS   idiv
+IDiv 1 r/m16(value)                          (OpSz 0xF7 arg1[0x07])      DS   idiv
+IDiv 1 r/m32(value)                          (0xF7 arg1[0x07])           DS   idiv
+
+/// <summary>
+/// Signed multiply.
+/// </summary>
+IMul 1 r/m8(value)                           (0xF6 arg1[0x05])           DS   imul
+IMul 1 r/m16(value)                          (OpSz 0xF7 arg1[0x05])      DS   imul
+IMul 1 r/m32(value)                          (0xF7 arg1[0x05])           DS   imul
+IMul 2 r16(destination),   r/m16(source)     (OpSz 0x0F 0xAF arg2[arg1]) DS   imul
+IMul 2 r32(destination),   r/m32(source)     (0x0F 0xAF arg2[arg1])      DS   imul
+IMul 3 r16(destination),   r/m16(source), imm8(imm)      (OpSz 0x6B arg2[arg1] arg3) DS   imul   override([r16 r/m16 imm16] fits[arg3] emitonly)
+IMul 3 r32(destination),   r/m32(source), imm8(imm)      (0x6B arg2[arg1] arg3)      DS   imul   override([r32 r/m32 imm32] fits[arg3] emitonly)
+IMul 3 r16(destination),   r/m16(source), imm16(imm)     (OpSz 0x69 arg2[arg1] arg3) DS   imul
+IMul 3 r32(destination),   r/m32(source), imm32(imm)     (0x69 arg2[arg1] arg3)      DS   imul
+
+//In
+
+/// <summary>
+/// Increment by 1.
+/// </summary>
+Inc  1 r/m8(value)                           (0xFE arg1[0x00])           DS   inc
+Inc  1 r/m16(value)                          (OpSz 0xFF arg1[0x00])      DS   inc
+Inc  1 r/m32(value)                          (0xFF arg1[0x00])           DS   inc
+Inc  1 r16(value)                            (OpSz 0x40+arg1)            NONE inc   override(exact)
+Inc  1 r32(value)                            (0x40+arg1)                 NONE inc   override(exact)
+
+//InS
+
+/// <summary>
+/// Call to interrupt procedure.
+/// </summary>
+Int  1 imm8(interuptNum)                     (0xCD arg1)           NONE int(arg1!=3)
+Int  1 imm8(interuptNum)                     (0xCC)                NONE int    override([imm8] comp[arg1=3] emitonly)
+Int  1 imm8(interuptNum)                     (0xCE)                NONE into   override([imm8] comp[arg1=4] emitonly)
+
+/// <summary>
+/// Flush internal caches; initiate flushing of external caches.
+/// </summary>
+InvD 0        (0x0F 0x08)      NONE invd
+
+//InvlPg
+
+//InvPcID
+
+/// <summary>
+/// Interrupt return.
+/// </summary>
+IRet        0 (0xCF)      NONE iret
+
+IRetW       0 (OpSz 0xCF) NONE iretw   docalias(IRet)
+
+// Fun Fact: The Jcc instruction generates roughly 50kb of source code across 2000 lines (when everything is enabled)
+JA    1 dis8(destination)          (0x77 arg1)           NONE ja     override([dis32] fits[arg1] emitonly)
+JAE   1 dis8(destination)          (0x73 arg1)           NONE jae    override([dis32] fits[arg1] emitonly)
+JB    1 dis8(destination)          (0x72 arg1)           NONE jb     override([dis32] fits[arg1] emitonly)
+JBE   1 dis8(destination)          (0x76 arg1)           NONE jbe    override([dis32] fits[arg1] emitonly)
+JC    1 dis8(destination)          (0x72 arg1)           NONE jc     override([dis32] fits[arg1] emitonly)
+JE    1 dis8(destination)          (0x74 arg1)           NONE je     override([dis32] fits[arg1] emitonly)
+JG    1 dis8(destination)          (0x7F arg1)           NONE jg     override([dis32] fits[arg1] emitonly)
+JGE   1 dis8(destination)          (0x7D arg1)           NONE jge    override([dis32] fits[arg1] emitonly)
+JL    1 dis8(destination)          (0x7C arg1)           NONE jl     override([dis32] fits[arg1] emitonly)
+JLE   1 dis8(destination)          (0x7E arg1)           NONE jle    override([dis32] fits[arg1] emitonly)
+JNA   1 dis8(destination)          (0x76 arg1)           NONE jna    override([dis32] fits[arg1] emitonly)
+JNAE  1 dis8(destination)          (0x72 arg1)           NONE jnae   override([dis32] fits[arg1] emitonly)
+JNB   1 dis8(destination)          (0x73 arg1)           NONE jnb    override([dis32] fits[arg1] emitonly)
+JNBE  1 dis8(destination)          (0x77 arg1)           NONE jnbe   override([dis32] fits[arg1] emitonly)
+JNC   1 dis8(destination)          (0x73 arg1)           NONE jnc    override([dis32] fits[arg1] emitonly)
+JNE   1 dis8(destination)          (0x75 arg1)           NONE jne    override([dis32] fits[arg1] emitonly)
+JNG   1 dis8(destination)          (0x7E arg1)           NONE jng    override([dis32] fits[arg1] emitonly)
+JNGE  1 dis8(destination)          (0x7C arg1)           NONE jnge   override([dis32] fits[arg1] emitonly)
+JNL   1 dis8(destination)          (0x7D arg1)           NONE jnl    override([dis32] fits[arg1] emitonly)
+JNLE  1 dis8(destination)          (0x7F arg1)           NONE jnle   override([dis32] fits[arg1] emitonly)
+JNO   1 dis8(destination)          (0x71 arg1)           NONE jno    override([dis32] fits[arg1] emitonly)
+JNP   1 dis8(destination)          (0x7B arg1)           NONE jnp    override([dis32] fits[arg1] emitonly)
+JNS   1 dis8(destination)          (0x79 arg1)           NONE jns    override([dis32] fits[arg1] emitonly)
+JNZ   1 dis8(destination)          (0x75 arg1)           NONE jnz    override([dis32] fits[arg1] emitonly)
+JO    1 dis8(destination)          (0x70 arg1)           NONE jo     override([dis32] fits[arg1] emitonly)
+JP    1 dis8(destination)          (0x7A arg1)           NONE jp     override([dis32] fits[arg1] emitonly)
+JPE   1 dis8(destination)          (0x7A arg1)           NONE jpe    override([dis32] fits[arg1] emitonly)
+JPO   1 dis8(destination)          (0x7B arg1)           NONE jpo    override([dis32] fits[arg1] emitonly)
+JS    1 dis8(destination)          (0x78 arg1)           NONE js     override([dis32] fits[arg1] emitonly)
+JZ    1 dis8(destination)          (0x74 arg1)           NONE jz     override([dis32] fits[arg1] emitonly)
+JA    1 dis16(destination)         (OpSz 0x0F 0x87 arg1) NONE ja     override([dis32] fits[arg1] emitonly)
+JAE   1 dis16(destination)         (OpSz 0x0F 0x83 arg1) NONE jae    override([dis32] fits[arg1] emitonly)
+JB    1 dis16(destination)         (OpSz 0x0F 0x82 arg1) NONE jb     override([dis32] fits[arg1] emitonly)
+JBE   1 dis16(destination)         (OpSz 0x0F 0x86 arg1) NONE jbe    override([dis32] fits[arg1] emitonly)
+JC    1 dis16(destination)         (OpSz 0x0F 0x82 arg1) NONE jc     override([dis32] fits[arg1] emitonly)
+JE    1 dis16(destination)         (OpSz 0x0F 0x84 arg1) NONE je     override([dis32] fits[arg1] emitonly)
+JG    1 dis16(destination)         (OpSz 0x0F 0x8F arg1) NONE jg     override([dis32] fits[arg1] emitonly)
+JGE   1 dis16(destination)         (OpSz 0x0F 0x8D arg1) NONE jge    override([dis32] fits[arg1] emitonly)
+JL    1 dis16(destination)         (OpSz 0x0F 0x8C arg1) NONE jl     override([dis32] fits[arg1] emitonly)
+JLE   1 dis16(destination)         (OpSz 0x0F 0x8E arg1) NONE jle    override([dis32] fits[arg1] emitonly)
+JNA   1 dis16(destination)         (OpSz 0x0F 0x86 arg1) NONE jna    override([dis32] fits[arg1] emitonly)
+JNAE  1 dis16(destination)         (OpSz 0x0F 0x82 arg1) NONE jnae   override([dis32] fits[arg1] emitonly)
+JNB   1 dis16(destination)         (OpSz 0x0F 0x83 arg1) NONE jnb    override([dis32] fits[arg1] emitonly)
+JNBE  1 dis16(destination)         (OpSz 0x0F 0x87 arg1) NONE jnbe   override([dis32] fits[arg1] emitonly)
+JNC   1 dis16(destination)         (OpSz 0x0F 0x83 arg1) NONE jnc    override([dis32] fits[arg1] emitonly)
+JNE   1 dis16(destination)         (OpSz 0x0F 0x85 arg1) NONE jne    override([dis32] fits[arg1] emitonly)
+JNG   1 dis16(destination)         (OpSz 0x0F 0x8E arg1) NONE jng    override([dis32] fits[arg1] emitonly)
+JNGE  1 dis16(destination)         (OpSz 0x0F 0x8C arg1) NONE jnge   override([dis32] fits[arg1] emitonly)
+JNL   1 dis16(destination)         (OpSz 0x0F 0x8D arg1) NONE jnl    override([dis32] fits[arg1] emitonly)
+JNLE  1 dis16(destination)         (OpSz 0x0F 0x8F arg1) NONE jnle   override([dis32] fits[arg1] emitonly)
+JNO   1 dis16(destination)         (OpSz 0x0F 0x81 arg1) NONE jno    override([dis32] fits[arg1] emitonly)
+JNP   1 dis16(destination)         (OpSz 0x0F 0x8B arg1) NONE jnp    override([dis32] fits[arg1] emitonly)
+JNS   1 dis16(destination)         (OpSz 0x0F 0x89 arg1) NONE jns    override([dis32] fits[arg1] emitonly)
+JNZ   1 dis16(destination)         (OpSz 0x0F 0x85 arg1) NONE jnz    override([dis32] fits[arg1] emitonly)
+JO    1 dis16(destination)         (OpSz 0x0F 0x80 arg1) NONE jo     override([dis32] fits[arg1] emitonly)
+JP    1 dis16(destination)         (OpSz 0x0F 0x8A arg1) NONE jp     override([dis32] fits[arg1] emitonly)
+JPE   1 dis16(destination)         (OpSz 0x0F 0x8A arg1) NONE jpe    override([dis32] fits[arg1] emitonly)
+JPO   1 dis16(destination)         (OpSz 0x0F 0x8B arg1) NONE jpo    override([dis32] fits[arg1] emitonly)
+JS    1 dis16(destination)         (OpSz 0x0F 0x88 arg1) NONE js     override([dis32] fits[arg1] emitonly)
+JZ    1 dis16(destination)         (OpSz 0x0F 0x84 arg1) NONE jz     override([dis32] fits[arg1] emitonly)
+/// <summary>
+/// Jump if above.
+/// </summary>
+JA    1 dis32(destination)         (0x0F 0x87 arg1)      NONE ja
+/// <summary>
+/// Jump if above or equal.
+/// </summary>
+JAE   1 dis32(destination)         (0x0F 0x83 arg1)      NONE jae
+/// <summary>
+/// Jump if below.
+/// </summary>
+JB    1 dis32(destination)         (0x0F 0x82 arg1)      NONE jb
+/// <summary>
+/// Jump if below or equal.
+/// </summary>
+JBE   1 dis32(destination)         (0x0F 0x86 arg1)      NONE jbe
+/// <summary>
+/// Jump if carry.
+/// </summary>
+JC    1 dis32(destination)         (0x0F 0x82 arg1)      NONE jc
+/// <summary>
+/// Jump if equal.
+/// </summary>
+JE    1 dis32(destination)         (0x0F 0x84 arg1)      NONE je
+/// <summary>
+/// Jump if greater.
+/// </summary>
+JG    1 dis32(destination)         (0x0F 0x8F arg1)      NONE jg
+/// <summary>
+/// Jump if greater or equal.
+/// </summary>
+JGE   1 dis32(destination)         (0x0F 0x8D arg1)      NONE jge
+/// <summary>
+/// Jump if less.
+/// </summary>
+JL    1 dis32(destination)         (0x0F 0x8C arg1)      NONE jl
+/// <summary>
+/// Jump if less or equal.
+/// </summary>
+JLE   1 dis32(destination)         (0x0F 0x8E arg1)      NONE jle
+/// <summary>
+/// Jump if not above.
+/// </summary>
+JNA   1 dis32(destination)         (0x0F 0x86 arg1)      NONE jna
+/// <summary>
+/// Jump if not above or equal.
+/// </summary>
+JNAE  1 dis32(destination)         (0x0F 0x82 arg1)      NONE jnae
+/// <summary>
+/// Jump if not below.
+/// </summary>
+JNB   1 dis32(destination)         (0x0F 0x83 arg1)      NONE jnb
+/// <summary>
+/// Jump if not below or equal.
+/// </summary>
+JNBE  1 dis32(destination)         (0x0F 0x87 arg1)      NONE jnbe
+/// <summary>
+/// Jump if not carry.
+/// </summary>
+JNC   1 dis32(destination)         (0x0F 0x83 arg1)      NONE jnc
+/// <summary>
+/// Jump if not equal.
+/// </summary>
+JNE   1 dis32(destination)         (0x0F 0x85 arg1)      NONE jne
+/// <summary>
+/// Jump if not greater.
+/// </summary>
+JNG   1 dis32(destination)         (0x0F 0x8E arg1)      NONE jng
+/// <summary>
+/// Jump if not greater or equal.
+/// </summary>
+JNGE  1 dis32(destination)         (0x0F 0x8C arg1)      NONE jnge
+/// <summary>
+/// Jump if not less.
+/// </summary>
+JNL   1 dis32(destination)         (0x0F 0x8D arg1)      NONE jnl
+/// <summary>
+/// Jump if not less or equal.
+/// </summary>
+JNLE  1 dis32(destination)         (0x0F 0x8F arg1)      NONE jnle
+/// <summary>
+/// Jump if not overflow.
+/// </summary>
+JNO   1 dis32(destination)         (0x0F 0x81 arg1)      NONE jno
+/// <summary>
+/// Jump if not parity.
+/// </summary>
+JNP   1 dis32(destination)         (0x0F 0x8B arg1)      NONE jnp
+/// <summary>
+/// Jump if not sign.
+/// </summary>
+JNS   1 dis32(destination)         (0x0F 0x89 arg1)      NONE jns
+/// <summary>
+/// Jump if not zero.
+/// </summary>
+JNZ   1 dis32(destination)         (0x0F 0x85 arg1)      NONE jnz
+/// <summary>
+/// Jump if overflow.
+/// </summary>
+JO    1 dis32(destination)         (0x0F 0x80 arg1)      NONE jo
+/// <summary>
+/// Jump if parity.
+/// </summary>
+JP    1 dis32(destination)         (0x0F 0x8A arg1)      NONE jp
+/// <summary>
+/// Jump if parity even.
+/// </summary>
+JPE   1 dis32(destination)         (0x0F 0x8A arg1)      NONE jpe
+/// <summary>
+/// Jump if parity odd.
+/// </summary>
+JPO   1 dis32(destination)         (0x0F 0x8B arg1)      NONE jpo
+/// <summary>
+/// Jump if sign.
+/// </summary>
+JS    1 dis32(destination)         (0x0F 0x88 arg1)      NONE js
+/// <summary>
+/// Jump if zero.
+/// </summary>
+JZ    1 dis32(destination)         (0x0F 0x84 arg1)      NONE jz
+/// <summary>
+/// Jump short if CX is zero.
+/// </summary>
+JCX   1 dis8(destination)          (OpSz 0xE3 arg1)      NONE jcx
+/// <summary>
+/// Jump short if ECX is zero.
+/// </summary>
+JECX  1 dis8(destination)          (0xE3 arg1)           NONE jecx
+
+//Jmp
+
+/// <summary>
+/// Load status flags into AH register.
+/// </summary>
+LAHF        0 (0x9F)      NONE lahf
+
+/// <summary>
+/// Load access rights byte.
+/// </summary>
+LAR  2 r16(destination),   r/m16(source)     (OpSz 0x0F 0x02 arg2[arg1]) DS   lar
+LAR  2 r32(destination),   r/m32(source)     (0x0F 0x02 arg2[arg1])      DS   lar
+
+/// <summary>
+/// Load MXCSR register.
+/// </summary>
+LDMXCSR 1 mem32(source)      (0x0F 0xAE arg1[0x02])      DS   ldmxcsr
+
+//LDS & Family
+
+/// <summary>
+/// Load effective address.
+/// </summary>
+LEA  2 r16(destination),   mem16(source)     (OpSz 0x8D arg2[arg1])      DS   lea
+LEA  2 r32(destination),   mem32(source)     (0x8D arg2[arg1])           DS   lea
+
+/// <summary>
+/// High level procedure exit.
+/// </summary>
+Leave       0 (0xC9)      NONE leave
+
+//LFence
+
+/// <summary>
+/// Load global descriptor table register.
+/// </summary>
+LGDT 1 r/m16(source)             (OpSz 0x0F 0x01 arg1[0x02])   DS   lgdt
+LGDT 1 r/m32(source)             (0x0F 0x01 arg1[0x02])        DS   lgdt
+
+/// <summary>
+/// Load interrupt descriptor table register.
+/// </summary>
+LIDT 1 r/m16(source)             (OpSz 0x0F 0x01 arg1[0x03])   DS   lidt
+LIDT 1 r/m32(source)             (0x0F 0x01 arg1[0x03])        DS   lidt
+
+/// <summary>
+/// Load local descriptor table register.
+/// </summary>
+LLDT 1 r/m16(source)             (0x0F 0x00 arg1[0x02])   DS   lldt
+
+/// <summary>
+/// Load machine status word.
+/// </summary>
+LMSW 1 r/m16(source)             (0x0F 0x01 arg1[0x06])   DS   lmsw
+
+/// <summary>
+/// Assert the LOCK# signal prefix.
+/// </summary>
+Lock 0                           (0xF0)                   NONE lock
+
+/// <summary>
+/// Load string.
+/// </summary>
+LODS   1 mem8(source)            (0xAC arg1[0x00])        DS   lods
+LODS   1 mem16(source)           (OpSz 0xAD arg1[0x00])   DS   lods
+LODS   1 mem32(source)           (0xAD arg1[0x00])        DS   lods
+LODSB  0                         (0xAC)                   NONE lodsb    docalias(LODS)
+LODSW  0                         (OpSz 0xAD)              NONE lodsw    docalias(LODS)
+LODSD  0                         (0xAD)                   NONE lodsd    docalias(LODS)
+
+/// <summary>
+/// Loop according to ECX counter.
+/// </summary>
+Loop   1 dis8(destination)             (0xE2 arg1)        NONE loop
+LoopE  1 dis8(destination)             (0xE1 arg1)        NONE loope    docalias(Loop)
+LoopNE 1 dis8(destination)             (0xE0 arg1)        NONE loopne   docalias(Loop)
+
+/// <summary>
+/// Load segment limit.
+/// </summary>
+LSL    2 r16(destination),   r/m16(source)       (OpSz 0x0F 0x03 arg2[arg1])    DS   lsl
+LSL    2 r32(destination),   r/m32(source)       (0x0F 0x03 arg2[arg1])         DS   lsl
+
+/// <summary>
+/// Load task register.
+/// </summary>
+LTR    1 r/m16(source)           (0x0F 0x00 arg1[0x03])   DS   ltr
+
+/// <summary>
+/// Setup monitor address.
+/// </summary>
+Monitor     0 (0x0F 0x01 0xC8) NONE monitor
+
+/// <summary>
+/// Move data.
+/// </summary>
+Mov 2 r8(destination),     imm8(imm)         (0xB0+arg1 arg2)            NONE mov
+Mov 2 r16(destination),    imm16(imm)        (OpSz 0xB8+arg1 arg2)       NONE mov
+Mov 2 r32(destination),    imm32(imm)        (0xB8+arg1 arg2)            NONE mov
+Mov 2 r8(destination),     r/m8(source)      (0x8A arg2[arg1])           DS   mov
+Mov 2 r16(destination),    r/m16(source)     (OpSz 0x8B arg2[arg1])      DS   mov
+Mov 2 r32(destination),    r/m32(source)     (0x8B arg2[arg1])           DS   mov
+Mov 2 r/m8(destination),   r8(source)        (0x88 arg1[arg2])           DS   mov
+Mov 2 r/m16(destination),  r16(source)       (OpSz 0x89 arg1[arg2])      DS   mov
+Mov 2 r/m32(destination),  r32(source)       (0x89 arg1[arg2])           DS   mov
+Mov 2 r/m8(destination),   imm8(imm)         (0xC6 arg1[0x00] arg2)      DS   mov
+Mov 2 r/m16(destination),  imm16(imm)        (OpSz 0xC7 arg1[0x00] arg2) DS   mov
+Mov 2 r/m32(destination),  imm32(imm)        (0xC7 arg1[0x00] arg2)      DS   mov
+Mov 2 r/m16(destination),  sreg(segment)     (OpSz 0x8C arg1[arg2])      DS   mov
+Mov 2 sreg(segment),       r/m16(source)     (OpSz 0x8E arg2[arg1])      DS   mov
+Mov 2 r32(destination),    creg(source)      (0x0F 0x20 arg2[arg1])      DS   mov
+Mov 2 creg(destination),   r32(source)       (0x0F 0x22 arg1[arg2])      DS   mov
+Mov 2 r32(destination),    dreg(source)      (0x0F 0x21 arg2[arg1])      DS   mov
+Mov 2 dreg(destination),   r32(source)       (0x0F 0x23 arg1[arg2])      DS   mov
+//Mov 2 mem8(destination),   r8(source)              (0xA2 arg1)           DS   mov   override([mem8  r8]    comp[arg2=AL]  emitonly)
+//Mov 2 mem16(destination),  r16(source)             (OpSz 0xA3 arg1)      DS   mov   override([mem16 r16]   comp[arg2=AX]  emitonly)
+//Mov 2 mem32(destination),  r32(source)             (0xA3 arg1)           DS   mov   override([mem32 r32]   comp[arg2=EAX] emitonly)
+//Mov 2 r8(destination),     mem8(source)            (0xA0 arg2)           DS   mov   override([r8    mem8]  comp[arg1=AL]  emitonly)
+//Mov 2 r16(destination),    mem16(source)           (OpSz 0xA1 arg2)      DS   mov   override([r16   mem16] comp[arg1=AX]  emitonly)
+//Mov 2 r32(destination),    mem32(source)           (0xA1 arg2)           DS   mov   override([r32   mem32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Move data after swapping bytes.
+/// </summary>
+MovBE 2 r16(destination),    mem16(source)     (OpSz 0x0F 0x38 0xF0 arg2[arg1])       DS   movbe
+MovBE 2 r32(destination),    mem32(source)     (0x0F 0x38 0xF0 arg2[arg1])            DS   movbe
+MovBE 2 mem16(destination),  r16(source)       (OpSz 0x0F 0x38 0xF1 arg1[arg2])       DS   movbe
+MovBE 2 mem32(destination),  r32(source)       (0x0F 0x38 0xF1 arg1[arg2])            DS   movbe
+
+// MovS & Family
+
+// MovSX
+
+// MovZX
+
+/// <summary>
+/// Unsigned multiply.
+/// </summary>
+Mul 1 r/m8(value)                            (0xF6 arg1[0x04])           DS   mul
+Mul 1 r/m16(value)                           (OpSz 0xF7 arg1[0x04])      DS   mul
+Mul 1 r/m32(value)                           (0xF7 arg1[0x04])           DS   mul
+
+/// <summary>
+/// Monitor wait.
+/// </summary>
+MWait 0                                            (0x0F 0x01 0xC9)      NONE mwait
+
+/// <summary>
+/// Two's compliment negation.
+/// </summary>
+Neg 1 r/m8(value)                            (0xF6 arg1[0x03])           DS   neg
+Neg 1 r/m16(value)                           (OpSz 0xF7 arg1[0x03])      DS   neg
+Neg 1 r/m32(value)                           (0xF7 arg1[0x03])           DS   neg
+
+// Nop
+
+/// <summary>
+/// One's compliment negation.
+/// </summary>
+Not 1 r/m8(value)                            (0xF6 arg1[0x02])           DS   not
+Not 1 r/m16(value)                           (OpSz 0xF7 arg1[0x02])      DS   not
+Not 1 r/m32(value)                           (0xF7 arg1[0x02])           DS   not
+
+/// <summary>
+/// Logical inclusive OR.
+/// </summary>
+Or 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x01] arg2)      DS   or
+Or 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x01] arg2) DS   or
+Or 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x01] arg2)      DS   or
+Or 2 r/m8(destination),   r8(source)        (0x08 arg1[arg2])           DS   or
+Or 2 r/m16(destination),  r16(source)       (OpSz 0x09 arg1[arg2])      DS   or
+Or 2 r/m32(destination),  r32(source)       (0x09 arg1[arg2])           DS   or
+Or 2 r8(destination),     r/m8(source)      (0x0A arg2[arg1])           DS   or
+Or 2 r16(destination),    r/m16(source)     (OpSz 0x0B arg2[arg1])      DS   or
+Or 2 r32(destination),    r/m32(source)     (0x0B arg2[arg1])           DS   or
+Or 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x01] arg2) DS   or   override([r/m16 imm16] fits[arg2] emitonly)
+Or 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x01] arg2)      DS   or   override([r/m32 imm32] fits[arg2] emitonly)
+Or 2 r8(destination),     imm8(imm)         (0x0C arg2)                 DS   or   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Or 2 r16(destination),    imm16(imm)        (OpSz 0x0D arg2)            DS   or   override([r16   imm16] comp[arg1=AX]  emitonly)
+Or 2 r32(destination),    imm32(imm)        (0x0D arg2)                 DS   or   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+// Out
+
+// OutS & Family
+
+/// <summary>
+/// Spin loop hint.
+/// </summary>
+Pause       0 (0xF3 0x90) NONE pause
+
+/// <summary>
+/// Pop a value from the stack.
+/// </summary>
+Pop 1 r/m16(destination)                    (OpSz 0x8F arg1[0x00])      DS   pop
+Pop 1 r/m32(destination)                    (0x8F arg1[0x00])           DS   pop
+Pop 1 r16(destination)                      (OpSz 0x58+arg1)            NONE pop   override(exact)
+Pop 1 r32(destination)                      (0x58+arg1)                 NONE pop   override(exact)
+Pop 1 sreg(source)                          (evil["Invalid Segment Register!"])  NONE pop
+Pop 1 sreg(source)                          (0x1F)                      NONE pop   override([sreg] comp[arg1=DS])
+Pop 1 sreg(source)                          (0x07)                      NONE pop   override([sreg] comp[arg1=ES])
+Pop 1 sreg(source)                          (0x17)                      NONE pop   override([sreg] comp[arg1=SS])
+Pop 1 sreg(source)                          (0x0F 0xA1)                 NONE pop   override([sreg] comp[arg1=FS])
+Pop 1 sreg(source)                          (0x0F 0xA9)                 NONE pop   override([sreg] comp[arg1=GS])
+
+/// <summary>
+/// Pop all general purpose registers.
+/// </summary>
+PopA        0 (0x61)      NONE popa
+
+/// <summary>
+/// Pop all word general purpose registers.
+/// </summary>
+PopAW       0 (OpSz 0x61) NONE popaw
+
+/// <summary>
+/// Return the count of the number of bits set to 1.
+/// </summary>
+PopCnt 2 r16(destination),       r/m16(source)         (OpSz 0xF3 0x0F 0xB8 arg2[arg1])      DS   popcnt
+PopCnt 2 r32(destination),       r/m32(source)         (0xF3 0x0F 0xB8 arg2[arg1])           DS   popcnt
+
+/// <summary>
+/// Pop stack into EFlags.
+/// </summary>
+PopF        0 (0x9D)      NONE popf
+
+/// <summary>
+/// Pop stack into lower 16-bits of EFlags.
+/// </summary>
+PopFW       0 (OpSz 0x9D) NONE popfw
+
+/// <summary>
+/// Prefetch data into caches using NTA hint.
+/// </summary>
+PrefetchNTA 1 mem8(source)     (0x0F 0x18 arg1[0x00])    DS   prefetchnta
+
+/// <summary>
+/// Prefetch data into caches using T0 hint.
+/// </summary>
+PrefetchT0  1 mem8(source)     (0x0F 0x18 arg1[0x01])    DS   prefetcht0
+
+/// <summary>
+/// Prefetch data into caches using T1 hint.
+/// </summary>
+PrefetchT1  1 mem8(source)     (0x0F 0x18 arg1[0x02])    DS   prefetcht1
+
+/// <summary>
+/// Prefetch data into caches using T2 hint.
+/// </summary>
+PrefetchT2  1 mem8(source)     (0x0F 0x18 arg1[0x03])    DS   prefetcht2
+
+/// <summary>
+/// Push value onto the stack.
+/// </summary>
+Push 1 r/m16(source)                         (OpSz 0xFF arg1[0x06])      DS   push
+Push 1 r/m32(source)                         (0xFF arg1[0x06])           DS   push
+Push 1 imm8(value)                           (0x6A)                      NONE push
+Push 1 imm16(value)                          (OpSz 0x68)                 NONE push
+Push 1 imm32(value)                          (0x68)                      NONE push
+Push 1 r16(source)                           (OpSz 0x50+arg1)            NONE push   override(exact)
+Push 1 r32(source)                           (0x50+arg1)                 NONE push   override(exact)
+Push 1 sreg(source)                          (evil["Invalid Segment Register!"])  NONE push
+Push 1 sreg(source)                          (0x0E)                      NONE push   override([sreg] comp[arg1=CS])
+Push 1 sreg(source)                          (0x16)                      NONE push   override([sreg] comp[arg1=SS])
+Push 1 sreg(source)                          (0x1E)                      NONE push   override([sreg] comp[arg1=DS])
+Push 1 sreg(source)                          (0x06)                      NONE push   override([sreg] comp[arg1=ES])
+Push 1 sreg(source)                          (0x0F 0xA0)                 NONE push   override([sreg] comp[arg1=FS])
+Push 1 sreg(source)                          (0x0F 0xA8)                 NONE push   override([sreg] comp[arg1=GS])
+
+/// <summary>
+/// Push all general purpose registers.
+/// </summary>
+PushA       0 (0x60)      NONE pusha
+
+/// <summary>
+/// Push all word general purpose registers.
+/// </summary>
+PushAW      0 (OpSz 0x60) NONE pushaw
+
+/// <summary>
+/// Push the EFlags register.
+/// </summary>
+PushF       0 (0x9C)      NONE pushf
+
+/// <summary>
+/// Push lower 16-bits of the EFlags register.
+/// </summary>
+PushFW      0 (OpSz 0x9C) NONE pushfw
+
+/// <summary>
+/// Signed rotate around left.
+/// </summary>
+RCL 1 r/m8(destination)                      (0xD2 arg1[0x02])           DS   rcl
+RCL 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x02] arg2)      DS   rcl
+RCL 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x02])           DS   rcl   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+RCL 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x02])      DS   rcl
+RCL 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x02] arg2) DS   rcl
+RCL 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x02])      DS   rcl   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+RCL 1 r/m32(destination)                     (0xD3 arg1[0x02])           DS   rcl
+RCL 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x02] arg2)      DS   rcl
+RCL 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x02])           DS   rcl   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Signed rotate around right.
+/// </summary>
+RCR 1 r/m8(destination)                      (0xD2 arg1[0x03])           DS   rcr
+RCR 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x03] arg2)      DS   rcr
+RCR 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x03])           DS   rcr   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+RCR 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x03])      DS   rcr
+RCR 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x03] arg2) DS   rcr
+RCR 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x03])      DS   rcr   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+RCR 1 r/m32(destination)                     (0xD3 arg1[0x03])           DS   rcr
+RCR 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x03] arg2)      DS   rcr
+RCR 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x03])           DS   rcr   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Unsigned rotate around left.
+/// </summary>
+ROL 1 r/m8(destination)                      (0xD2 arg1[0x00])           DS   rol
+ROL 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x00] arg2)      DS   rol
+ROL 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x00])           DS   rol   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+ROL 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x00])      DS   rol
+ROL 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x00] arg2) DS   rol
+ROL 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x00])      DS   rol   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+ROL 1 r/m32(destination)                     (0xD3 arg1[0x00])           DS   rol
+ROL 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x00] arg2)      DS   rol
+ROL 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x00])           DS   rol   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Unsigned rotate around right.
+/// </summary>
+ROR 1 r/m8(destination)                      (0xD2 arg1[0x01])           DS   ror
+ROR 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x01] arg2)      DS   ror
+ROR 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x01])           DS   ror   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+ROR 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x01])      DS   ror
+ROR 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x01] arg2) DS   ror
+ROR 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x01])      DS   ror   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+ROR 1 r/m32(destination)                     (0xD3 arg1[0x01])           DS   ror
+ROR 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x01] arg2)      DS   ror
+ROR 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x01])           DS   ror   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Read GS segment base.
+/// </summary>
+RdFSBase    1 r32(source)      (0xF3 0x0F 0xAE arg1[0x00])     NONE rdfsbase
+
+/// <summary>
+/// Read GS segment base.
+/// </summary>
+RdGSBase    1 r32(source)      (0xF3 0x0F 0xAE arg1[0x01])     NONE rdgsbase
+
+/// <summary>
+/// Read model specific register.
+/// </summary>
+RdMSR       0                        (0x0F 0x32)               NONE rdmsr
+
+/// <summary>
+/// Read performance-monitoring counters.
+/// </summary>
+RdMPC       0                        (0x0F 0x33)               NONE rdmpc
+
+/// <summary>
+/// Read random number.
+/// </summary>
+RdRand      1 r16(destination)      (OpSz 0x0F 0xC7 arg1[0x06])     NONE rdrand
+RdRand      1 r32(destination)      (0x0F 0xC7 arg1[0x06])          NONE rdrand
+
+/// <summary>
+/// Read time-stamp counter.
+/// </summary>
+RdTsc       0 (0x0F 0x31)      NONE rdtsc
+
+/// <summary>
+/// Read time-stamp counter and processor ID.
+/// </summary>
+RdTscP      0 (0x0F 0x01 0xF9) NONE rdtscp
+
+// Rep & Family
+
+/// <summary>
+/// Resume from system management mode.
+/// </summary>
+Rsm         0 (0x0F 0xAA)      NONE rsm
+
+/// <summary>
+/// Store AH into flags.
+/// </summary>
+Sahf        0 (0x9E)      NONE sahf
+
+/// <summary>
+/// Sign-extended shift left.
+/// </summary>
+SAL 1 r/m8(destination)                      (0xD2 arg1[0x04])           DS   sal
+SAL 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x04] arg2)      DS   sal
+SAL 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x04])           DS   sal   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+SAL 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x04])      DS   sal
+SAL 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x04] arg2) DS   sal
+SAL 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x04])      DS   sal   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+SAL 1 r/m32(destination)                     (0xD3 arg1[0x04])           DS   sal
+SAL 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x04] arg2)      DS   sal
+SAL 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x04])           DS   sal   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Sign-extended shift right.
+/// </summary>
+SAR 1 r/m8(destination)                      (0xD2 arg1[0x07])           DS   sar
+SAR 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x07] arg2)      DS   sar
+SAR 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x07])           DS   sar   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+SAR 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x07])      DS   sar
+SAR 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x07] arg2) DS   sar
+SAR 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x07])      DS   sar   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+SAR 1 r/m32(destination)                     (0xD3 arg1[0x07])           DS   sar
+SAR 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x07] arg2)      DS   sar
+SAR 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x07])           DS   sar   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Unsigned shift left.
+/// </summary>
+SHL 1 r/m8(destination)                      (0xD2 arg1[0x04])           DS   shl
+SHL 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x04] arg2)      DS   shl
+SHL 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x04])           DS   shl   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+SHL 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x04])      DS   shl
+SHL 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x04] arg2) DS   shl
+SHL 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x04])      DS   shl   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+SHL 1 r/m32(destination)                     (0xD3 arg1[0x04])           DS   shl
+SHL 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x04] arg2)      DS   shl
+SHL 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x04])           DS   shl   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Unsigned shift right.
+/// </summary>
+SHR 1 r/m8(destination)                      (0xD2 arg1[0x05])           DS   shr
+SHR 2 r/m8(destination),    imm8(imm)        (0xC0 arg1[0x05] arg2)      DS   shr
+SHR 2 r/m8(destination),    imm8(imm)        (0xD0 arg1[0x05])           DS   shr   override([r/m8  imm8]    comp[arg2=1]  emitonly)
+SHR 1 r/m16(destination)                     (OpSz 0xD3 arg1[0x05])      DS   shr
+SHR 2 r/m16(destination),   imm8(imm)        (OpSz 0xC1 arg1[0x05] arg2) DS   shr
+SHR 2 r/m16(destination),   imm8(imm)        (OpSz 0xD1 arg1[0x05])      DS   shr   override([r/m16  imm8]   comp[arg2=1]  emitonly)
+SHR 1 r/m32(destination)                     (0xD3 arg1[0x05])           DS   shr
+SHR 2 r/m32(destination),   imm8(imm)        (0xC1 arg1[0x05] arg2)      DS   shr
+SHR 2 r/m32(destination),   imm8(imm)        (0xD1 arg1[0x05])           DS   shr   override([r/m32  imm8]   comp[arg2=1]  emitonly)
+
+/// <summary>
+/// Integer subtraction with borrow.
+/// </summary>
+Sbb 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x03] arg2)      DS   sbb
+Sbb 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x03] arg2) DS   sbb
+Sbb 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x03] arg2)      DS   sbb
+Sbb 2 r8(destination),     r/m8(source)      (0x1A arg2[arg1])           DS   sbb
+Sbb 2 r16(destination),    r/m16(source)     (OpSz 0x1B arg2[arg1])      DS   sbb
+Sbb 2 r32(destination),    r/m32(source)     (0x1B arg2[arg1])           DS   sbb
+Sbb 2 r/m8(destination),   r8(source)        (0x18 arg1[arg2])           DS   sbb
+Sbb 2 r/m16(destination),  r16(source)       (OpSz 0x19 arg1[arg2])      DS   sbb
+Sbb 2 r/m32(destination),  r32(source)       (0x19 arg1[arg2])           DS   sbb
+Sbb 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x03] arg2) DS   sbb   override([r/m16 imm16] fits[arg2] emitonly)
+Sbb 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x03] arg2)      DS   sbb   override([r/m32 imm32] fits[arg2] emitonly)
+Sbb 2 r8(destination),     imm8(imm)         (0x1C arg2)                 NONE sbb   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Sbb 2 r16(destination),    imm16(imm)        (OpSz 0x1D arg2)            NONE sbb   override([r16   imm16] comp[arg1=AX]  emitonly)
+Sbb 2 r32(destination),    imm32(imm)        (0x1D arg2)                 NONE sbb   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Scan string.
+/// </summary>
+SCAS  1 mem8(source)                          (0xAE arg1[0x00])        DS   scas
+SCAS  1 mem16(source)                         (OpSz 0xAF arg1[0x00])   DS   scas
+SCAS  1 mem32(source)                         (0xAF arg1[0x00])        DS   scas
+SCASB 0                                       (0xAE)                   DS   scasb   docalias(SCAS)
+SCASW 0                                       (OpSz 0xAF)              DS   scasw   docalias(SCAS)
+SCASD 0                                       (0xAF)                   DS   scasd   docalias(SCAS)
+
+/// <summary>
+/// Set byte if above.
+/// </summary>
+SetA   1 r/m8(destination)                    (0x0F 0x97 arg1[0x00])   DS   seta
+/// <summary>								 
+/// Set byte if above or equal.			   
+/// </summary>							    
+SetAE  1 r/m8(destination)                    (0x0F 0x93 arg1[0x00])   DS   setae
+/// <summary>								 
+/// Set byte if below.					    
+/// </summary>							    
+SetB   1 r/m8(destination)                    (0x0F 0x92 arg1[0x00])   DS   setb
+/// <summary>								 
+/// Set byte if below or equal.			   
+/// </summary>							    
+SetBE  1 r/m8(destination)                    (0x0F 0x96 arg1[0x00])   DS   setbe
+/// <summary>								 
+/// Set byte if carry.					    
+/// </summary>							    
+SetC   1 r/m8(destination)                    (0x0F 0x92 arg1[0x00])   DS   setc
+/// <summary>								 
+/// Set byte if equal.					    
+/// </summary>							    
+SetE   1 r/m8(destination)                    (0x0F 0x94 arg1[0x00])   DS   sete
+/// <summary>								 
+/// Set byte if greater.					  
+/// </summary>							    
+SetG   1 r/m8(destination)                    (0x0F 0x9F arg1[0x00])   DS   setg
+/// <summary>								 
+/// Set byte if greater or equal.			 
+/// </summary>							    
+SetGE  1 r/m8(destination)                    (0x0F 0x9D arg1[0x00])   DS   setge
+/// <summary>								 
+/// Set byte if less.						 
+/// </summary>							    
+SetL   1 r/m8(destination)                    (0x0F 0x9C arg1[0x00])   DS   setl
+/// <summary>								 
+/// Set byte if less or equal.			    
+/// </summary>							    
+SetLE  1 r/m8(destination)                    (0x0F 0x9E arg1[0x00])   DS   setle
+/// <summary>								 
+/// Set byte if not above.				    
+/// </summary>							    
+SetNA  1 r/m8(destination)                    (0x0F 0x96 arg1[0x00])   DS   setna
+/// <summary>								 
+/// Set byte if not above or equal.		   
+/// </summary>							    
+SetNAE 1 r/m8(destination)                    (0x0F 0x92 arg1[0x00])   DS   setnae
+/// <summary>								 
+/// Set byte if not below.				    
+/// </summary>							    
+SetNB  1 r/m8(destination)                    (0x0F 0x93 arg1[0x00])   DS   setnb
+/// <summary>								 
+/// Set byte if not below or equal.		   
+/// </summary>							    
+SetNBE 1 r/m8(destination)                    (0x0F 0x97 arg1[0x00])   DS   setnbe
+/// <summary>								 
+/// Set byte if not carry.				    
+/// </summary>							    
+SetNC  1 r/m8(destination)                    (0x0F 0x93 arg1[0x00])   DS   setnc
+/// <summary>								 
+/// Set byte if not equal.				    
+/// </summary>							    
+SetNE  1 r/m8(destination)                    (0x0F 0x95 arg1[0x00])   DS   setne
+/// <summary>								 
+/// Set byte if not greater.				  
+/// </summary>							    
+SetNG  1 r/m8(destination)                    (0x0F 0x9E arg1[0x00])   DS   setng
+/// <summary>								 
+/// Set byte if not greater or equal.		 
+/// </summary>							    
+SetNGE 1 r/m8(destination)                    (0x0F 0x9C arg1[0x00])   DS   setnge
+/// <summary>								 
+/// Set byte if not less.					 
+/// </summary>							    
+SetNL  1 r/m8(destination)                    (0x0F 0x9D arg1[0x00])   DS   setnl
+/// <summary>								 
+/// Set byte if not less or equal.		    
+/// </summary>							    
+SetNLE 1 r/m8(destination)                    (0x0F 0x9F arg1[0x00])   DS   setnle
+/// <summary>								 
+/// Set byte if not overflow.				 
+/// </summary>							    
+SetNO  1 r/m8(destination)                    (0x0F 0x91 arg1[0x00])   DS   setno
+/// <summary>								 
+/// Set byte if not parity.				   
+/// </summary>							    
+SetNP  1 r/m8(destination)                    (0x0F 0x9B arg1[0x00])   DS   setnp
+/// <summary>								 
+/// Set byte if not sign.					 
+/// </summary>							    
+SetNS  1 r/m8(destination)                    (0x0F 0x99 arg1[0x00])   DS   setns
+/// <summary>								 
+/// Set byte if not zero.					 
+/// </summary>							    
+SetNZ  1 r/m8(destination)                    (0x0F 0x95 arg1[0x00])   DS   setnz
+/// <summary>								 
+/// Set byte if overflow.					 
+/// </summary>							    
+SetO   1 r/m8(destination)                    (0x0F 0x90 arg1[0x00])   DS   seto
+/// <summary>								 
+/// Set byte if parity.					   
+/// </summary>							    
+SetP   1 r/m8(destination)                    (0x0F 0x9A arg1[0x00])   DS   setp
+/// <summary>								 
+/// Set byte if parity even.				  
+/// </summary>							    
+SetPE  1 r/m8(destination)                    (0x0F 0x9A arg1[0x00])   DS   setpe
+/// <summary>								 
+/// Set byte if parity odd.				   
+/// </summary>							    
+SetPO  1 r/m8(destination)                    (0x0F 0x9B arg1[0x00])   DS   setpo
+/// <summary>								 
+/// Set byte if sign.						 
+/// </summary>							    
+SetS   1 r/m8(destination)                    (0x0F 0x98 arg1[0x00])   DS   sets
+/// <summary>								 
+/// Set byte if zero.						 
+/// </summary>							    
+SetZ   1 r/m8(destination)                    (0x0F 0x94 arg1[0x00])   DS   setz
+
+// SFence
+
+/// <summary>
+/// Store global descriptor table register.
+/// </summary>
+SGDT 1 r/m16(destination)                    (0x0F 0x01 arg1[0x00])      DS   sgdt
+
+/// <summary>
+/// Double precision shift left.
+/// </summary>
+SHLD 3 r/m16(base), r16(extension), imm8(shift)   (OpSz 0x0F 0xA4 arg1[arg2] arg3)   DS   shld
+SHLD 3 r/m32(base), r32(extension), imm8(shift)   (0x0F 0xA4 arg1[arg2] arg3)        DS   shld
+SHLD 2 r/m16(base), r16(extension)                (OpSz 0x0F 0xA5 arg1[arg2])        DS   shld
+SHLD 2 r/m32(base), r32(extension)                (0x0F 0xA5 arg1[arg2])             DS   shld
+												 
+/// <summary>								    
+/// Doube precision shft right.			    
+/// </sumary>								   
+SHRD 3 r/m16(base), r16(extension), imm8(shift)   (OpSz 0x0F 0xAC arg1[arg2] arg3)   DS   shrd
+SHRD 3 r/m32(base), r32(extension), imm8(shift)   (0x0F 0xAC arg1[arg2] arg3)        DS   shrd
+SHRD 2 r/m16(base), r16(extension)                (OpSz 0x0F 0xAD arg1[arg2])        DS   shrd
+SHRD 2 r/m32(base), r32(extension)                (0x0F 0xAD arg1[arg2])             DS   shrd
+
+/// <summary>
+/// Store interrupt descriptor table register.
+/// </summary>
+SIDT 1 r/m16(destination)                    (0x0F 0x01 arg1[0x01])      DS   sidt
+
+/// <summary>
+/// Store local descriptor table register.
+/// </summary>
+SLDT 1 r/m16(destination)                    (0x0F 0x00 arg1[0x00])      DS   sldt
+
+/// <summary>
+/// Store machine status word.
+/// </summary>
+SMSW 1 r/m16(destination)                    (OpSz 0x0F 0x01 arg1[0x04]) DS   smsw
+// There is an issue somewhere with constructor generation, and it doesn't add the size argument
+// for this form.
+//SMSW 1 r32(destination)                      (0x0F 0x01 arg1[0x04])      DS   smsw
+
+/// <summary>
+/// Set carry flag.
+/// </summary>
+Stc         0 (0xF9)      NONE stc
+
+/// <summary>
+/// Set direction flag.
+/// </summary>
+Std         0 (0xFD)      NONE std
+
+/// <summary>
+/// Set interrupt flag.
+/// </summary>
+Sti         0 (0xFB)      NONE sti
+
+// STOS & Family
+
+/// <summary>
+/// Store task register.
+/// </summary>
+STR 1 r/m16(source)                          (0x0F 0x00 arg1[0x01])      DS   str 
+
+/// <summary>
+/// Subtract.
+/// </summary>
+Sub 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x05] arg2)      DS   sub
+Sub 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x05] arg2) DS   sub
+Sub 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x05] arg2)      DS   sub
+Sub 2 r/m8(destination),   r8(source)        (0x28 arg1[arg2])           DS   sub
+Sub 2 r/m16(destination),  r16(source)       (OpSz 0x29 arg1[arg2])      DS   sub
+Sub 2 r/m32(destination),  r32(source)       (0x29 arg1[arg2])           DS   sub
+Sub 2 r8(destination),     r/m8(source)      (0x2A arg2[arg1])           DS   sub
+Sub 2 r16(destination),    r/m16(source)     (OpSz 0x2B arg2[arg1])      DS   sub
+Sub 2 r32(destination),    r/m32(source)     (0x2B arg2[arg1])           DS   sub
+Sub 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x05] arg2) DS   sub   override([r/m16 imm16] fits[arg2] emitonly)
+Sub 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x05] arg2)      DS   sub   override([r/m32 imm32] fits[arg2] emitonly)
+Sub 2 r8(destination),     imm8(imm)         (0x2C arg2)                 DS   sub   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Sub 2 r16(destination),    imm16(imm)        (OpSz 0x2D arg2)            DS   sub   override([r16   imm16] comp[arg1=AX]  emitonly)
+Sub 2 r32(destination),    imm32(imm)        (0x2D arg2)                 DS   sub   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Swap GS base register.
+/// </summary>
+SwapGS 0      (0x0F 0x01 0xF8) NONE swapgs
+
+/// <summary>
+/// Fast system call.
+/// </summary>
+SysCall     0 (0x0F 0x05)      NONE syscall
+
+/// <summary>
+/// Fast system call.
+/// </summary>
+SysEnter    0 (0x0F 0x34)      NONE sysenter
+
+/// <summary>
+/// Fast return from fast system call.
+/// </summary>
+SysExit     0 (0x0F 0x35)      NONE sysexit
+
+/// <summary>
+/// Return from fast system call.
+/// </summary>
+SysRet      0 (0x0F 0x07)      NONE sysret
+
+/// <summary>
+/// Logical compare.
+/// </summary>
+Test 2 r/m8(destination),   imm8(imm)         (0xF6 arg1[0x00] arg2)      DS   test
+Test 2 r/m16(destination),  imm16(imm)        (OpSz 0xF7 arg1[0x00] arg2) DS   test
+Test 2 r/m32(destination),  imm32(imm)        (0xF7 arg1[0x00] arg2)      DS   test
+Test 2 r/m8(destination),   r8(source)        (0x84 arg1[arg2])           DS   test
+Test 2 r/m16(destination),  r16(source)       (OpSz 0x85 arg1[arg2])      DS   test
+Test 2 r/m32(destination),  r32(source)       (0x85 arg1[arg2])           DS   test
+Test 2 r8(destination),     imm8(imm)         (0xA8 arg2)                 DS   test   override([r8    imm8]  comp[arg1=AL]  emitonly)
+Test 2 r16(destination),    imm16(imm)        (OpSz 0xA9 arg2)            DS   test   override([r16   imm16] comp[arg1=AX]  emitonly)
+Test 2 r32(destination),    imm32(imm)        (0xA9 arg2)                 DS   test   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// The entire purpose of this instruction's
+/// existence is to cause the Invalid OpCode
+/// exception. (it performs it admirably)
+/// </summary>
+Ud2         0 (0x0F 0x0B)      NONE ud2
+
+/// <summary>
+/// Verify a segment for reading.
+/// </summary>
+VErR 1 r/m16(source)                          (0x0F 0x00 arg1[0x04])      DS   verr
+
+/// <summary>
+/// Verify a segment for writing.
+/// </summary>
+VErW 1 r/m16(source)                          (0x0F 0x00 arg1[0x05])      DS   verw
+
+/// <summary>
+/// Check pending unmasked floating-point exceptions.
+/// </summary>
+Wait        0 (0x9B)           NONE wait
+
+/// <summary>
+/// Write back and invalidate cache.
+/// </summary>
+WbInvd      0 (0x0F 0x09)      NONE wbinvd
+
+/// <summary>
+/// Write FS segment base.
+/// </summary>
+WrFSBase    1 r32(source)                     (0xF3 0x0F 0xAE arg1[0x02])      NONE wrfsbase
+
+/// <summary>
+/// Write GS segment base.
+/// </summary>
+WrGSBase    1 r32(source)                     (0xF3 0x0F 0xAE arg1[0x03])      NONE wrgsbase
+
+/// <summary>
+/// Write to model specific register.
+/// </summary>
+WrMSR       0 (0x0F 0x30)      NONE wrmsr
+
+/// <summary>
+/// Exchange and add.
+/// </summary>
+XAdd 2 r/m8(destination),   r8(source)        (0x0F 0xC0 arg1[arg2])           DS   xadd
+XAdd 2 r/m16(destination),  r16(source)       (OpSz 0x0F 0xC1 arg1[arg2])      DS   xadd
+XAdd 2 r/m32(destination),  r32(source)       (0x0F 0xC1 arg1[arg2])           DS   xadd
+
+/// <summary>
+/// Exchange register/memory with register.
+/// </summary>
+XChg 2 r/m8(destination),   r8(source)        (0x86 arg1[arg2])                DS   xchg
+XChg 2 r8(destination),     r/m8(source)      (0x86 arg2[arg1])                DS   xchg
+XChg 2 r/m16(destination),  r16(source)       (OpSz 0x87 arg1[arg2])           DS   xchg
+XChg 2 r16(destination),    r/m16(source)     (OpSz 0x87 arg2[arg1])           DS   xchg
+XChg 2 r/m32(destination),  r32(source)       (0x87 arg1[arg2])                DS   xchg
+XChg 2 r32(destination),    r/m32(source)     (0x87 arg2[arg1])                DS   xchg
+XChg 2 r16(destination),    r16(source)       (OpSz 0x90+arg1)                 NONE xchg   override([r16 r16] comp[arg2=AX]  emitonly)
+XChg 2 r16(destination),    r16(source)       (OpSz 0x90+arg2)                 NONE xchg   override([r16 r16] comp[arg1=AX]  emitonly)
+XChg 2 r32(destination),    r32(source)       (0x90+arg1)                      NONE xchg   override([r32 r32] comp[arg2=EAX] emitonly)
+XChg 2 r32(destination),    r32(source)       (0x90+arg2)                      NONE xchg   override([r32 r32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Get the value of extended control register.
+/// </summary>
+XGetBV      0                                (0x0F 0x01 0xD0)            NONE xgetbv
+
+/// <summary>
+/// Table look-up translation.
+/// </summary>
+XLat        1 mem8(baseAddress)              (0xD7 arg1[0x00])           DS   xlat
+XLatB       0                                (0xD7)                      DS   xlatb   docalias(XLat)
+
+/// <summary>
+/// Logical exclusive OR.
+/// </summary>
+XOr 2 r/m8(destination),   imm8(imm)         (0x80 arg1[0x06] arg2)      DS   xor
+XOr 2 r/m16(destination),  imm16(imm)        (OpSz 0x81 arg1[0x06] arg2) DS   xor
+XOr 2 r/m32(destination),  imm32(imm)        (0x81 arg1[0x06] arg2)      DS   xor
+XOr 2 r/m8(destination),   r8(source)        (0x30 arg1[arg2])           DS   xor
+XOr 2 r/m16(destination),  r16(source)       (OpSz 0x31 arg1[arg2])      DS   xor
+XOr 2 r/m32(destination),  r32(source)       (0x31 arg1[arg2])           DS   xor
+XOr 2 r8(destination),     r/m8(source)      (0x32 arg2[arg1])           DS   xor
+XOr 2 r16(destination),    r/m16(source)     (OpSz 0x33 arg2[arg1])      DS   xor
+XOr 2 r32(destination),    r/m32(source)     (0x33 arg2[arg1])           DS   xor
+XOr 2 r/m16(destination),  imm8(imm)         (OpSz 0x83 arg1[0x06] arg2) DS   xor   override([r/m16 imm16] fits[arg2] emitonly)
+XOr 2 r/m32(destination),  imm8(imm)         (0x83 arg1[0x06] arg2)      DS   xor   override([r/m32 imm32] fits[arg2] emitonly)
+XOr 2 r8(destination),     imm8(imm)         (0x34 arg2)                 DS   xor   override([r8    imm8]  comp[arg1=AL]  emitonly)
+XOr 2 r16(destination),    imm16(imm)        (OpSz 0x35 arg2)            DS   xor   override([r16   imm16] comp[arg1=AX]  emitonly)
+XOr 2 r32(destination),    imm32(imm)        (0x35 arg2)                 DS   xor   override([r32   imm32] comp[arg1=EAX] emitonly)
+
+/// <summary>
+/// Restore processor extended states.
+/// </summary>
+XRStor      1 mem32(source)                  (0x0F 0xAE arg1[0x05])      DS   xrstor
+
+/// <summary>
+/// Save processor extended states.
+/// </summary>
+XSave       1 mem32(destination)             (0x0F 0xAE arg1[0x04])      DS   xsave
+
+/// <summary>
+/// Save processor extended states optimized.
+/// </summary>
+XSaveOpt    1 mem32(destination)             (0x0F 0xAE arg1[0x06])      DS   xsaveopt
+
+/// <summary>
+/// Set extended control register.
+/// </summary>
+XSetBV      0                                (0x0F 0x01 0xD1)            NONE xsetbv
+
+
+
+
+
+// FPU Instructions
+
+
+
+
+
+/// <summary>
+/// Compute 2 to the power of ST(0) minus 1
+/// and store it in ST(0).
+/// </summary>
+FPU/F2XM1   0                                   (0xD9 0xF0)      NONE f2xm1
+
+/// <summary>
+/// Compute the absolute value of ST(0)
+/// and store it in ST(0).
+/// </summary>
+FPU/FAbs    0                                   (0xD9 0xE1)      NONE fabs
+
+/// <summary>
+/// Add two floating-point values.
+/// </summary>
+FPU/FAdd    1  memf32(source)                   (0xD8 arg1[0x00])      DS   fadd
+FPU/FAdd    1  memf64(source)                   (0xDC arg1[0x00])      DS   fadd
+FPU/FAdd    2  sti(destination),   sti(source)  (evil["Invalid combination of registers! (One of them must be ST(0))"])  NONE fadd
+FPU/FAdd    2  sti(destination),   sti(source)  (0xD8 0xC0+arg2) NONE fadd   override([sti sti]  comp[arg1=0])
+FPU/FAdd    2  sti(destination),   sti(source)  (0xDC 0xC0+arg1) NONE fadd   override([sti sti]  comp[arg2=0])
+
+/// <summary>
+/// Add ST(0) to ST(i), store
+/// it in ST(i), and pop the
+/// FPU stack.
+/// </summary>
+FPU/FAddP   1  sti(destination)                 (0xDE 0xC0+arg1) NONE faddp
+
+/// <summary>
+/// Add ST(0) to an integer in memory and
+/// store the result in ST(0).
+/// </summary>
+FPU/FIAdd   1  mem32(source)                    (0xDA arg1[0x00])      DS   fiadd
+FPU/FIAdd   1  mem16(source)                    (0xDE arg1[0x00])      DS   fiadd
+
+/// <summary>
+/// Load a binary coded decimal
+/// and push it onto the FPU
+/// stack.
+/// </summary>
+FPU/FBld    1  memf80(source)                   (0xDF arg1[0x04])      DS   fbld
+
+/// <summary>
+/// Store ST(0) as a BCD and pop
+/// the FPU stack.
+/// </summary>
+FPU/FBStP   1  memf80(destination)              (0xDF arg1[0x06])      DS   fbstp
+
+/// <summary>
+/// Compliment the sign of ST(0).
+/// </summary>
+FPU/FChs    0                                   (0xD9 0xE0)      NONE fchs
+
+/// <summary>
+/// Clear floating-point exception
+/// flags after checking for pending
+/// unmasked floating-point exceptions.
+/// </summary>
+FPU/FClEx   0                                   (0x9B 0xDB 0xE2) NONE fclex
+/// <summary>
+/// Clear floating-point exception
+/// flags without checking for pending
+/// unmasked floating-point exceptions.
+/// </summary>
+FPU/FNClEx  0                                   (0xDB 0xE2)      NONE fnclex
+
+/// <summary>
+/// Move the source into ST(0) if
+/// below.
+/// </summary>
+FPU/FCMovB   1  sti(source)                      (0xDA 0xC0+arg1) NONE fcmovb
+/// <summary>
+/// Move the source into ST(0) if
+/// equal.
+/// </summary>
+FPU/FCMovE   1  sti(source)                      (0xDA 0xC8+arg1) NONE fcmove
+/// <summary>
+/// Move the source into ST(0) if
+/// below or equal.
+/// </summary>
+FPU/FCMovBE  1  sti(source)                      (0xDA 0xD0+arg1) NONE fcmovbe
+/// <summary>
+/// Move the source into ST(0) if
+/// unordered.
+/// </summary>
+FPU/FCMovU   1  sti(source)                      (0xDA 0xD8+arg1) NONE fcmovu
+/// <summary>
+/// Move the source into ST(0) if
+/// not below.
+/// </summary>
+FPU/FCMovNB  1  sti(source)                      (0xDB 0xC0+arg1) NONE fcmovnb
+/// <summary>
+/// Move the source into ST(0) if
+/// not equal.
+/// </summary>
+FPU/FCMovNE  1  sti(source)                      (0xDB 0xC8+arg1) NONE fcmovne
+/// <summary>
+/// Move the source into ST(0) if
+/// not below or equal.
+/// </summary>
+FPU/FCMovNBE 1  sti(source)                      (0xDB 0xD0+arg1) NONE fcmovnbe
+/// <summary>
+/// Move the source into ST(0) if
+/// not unordered.
+/// </summary>
+FPU/FCMovNU  1  sti(source)                      (0xDB 0xD8+arg1) NONE fcmovnu
+
+/// <summary>
+/// Compare ST(0) to a floating-point 
+/// value.
+/// </summary>
+FPU/FCom    1  memf32(source)                   (0xD8 arg1[0x02])      DS   fcom
+FPU/FCom    1  memf64(source)                   (0xDC arg1[0x02])      DS   fcom
+FPU/FCom    1  sti(source)                      (0xD8 0xD0+arg1) NONE fcom
+
+/// <summary>
+/// Compare ST(0) to a floating-point
+/// value and pop the FPU stack.
+/// </summary>
+FPU/FComP   1  memf32(source)                   (0xD8 arg1[0x03])      DS   fcomp
+FPU/FComP   1  memf64(source)                   (0xDC arg1[0x03])      DS   fcomp
+FPU/FComP   1  sti(source)                      (0xD8 0xD8+arg1) NONE fcomp
+
+/// <summary>
+/// Compare ST(0) to ST(1) and
+/// pop the FPU stack twice.
+/// </summary>
+FPU/FCompPP 0                                   (0xDE 0xD9)      NONE fcompp
+
+/// <summary>
+/// Compare ST(0) with ST(i) and set
+/// EFlags accordingly.
+/// </summary>
+FPU/FComI   1  sti(source)                      (0xDB 0xF0+arg1) NONE fcomi
+
+/// <summary>
+/// Compare ST(0) with ST(i), set
+/// EFlags accordingly, and pop the FPU stack.
+/// </summary>
+FPU/FComIP  1  sti(source)                      (0xDF 0xF0+arg1) NONE fcomip
+
+/// <summary>
+/// Compare ST(0) with ST(i), check
+/// for ordered values, and set EFlags
+/// accordingly.
+/// </summary>
+FPU/FUComI  1  sti(source)                      (0xDB 0xE8+arg1) NONE fucomi
+
+/// <summary>
+/// Compare ST(0) with ST(i), check
+/// for ordered values, set EFlags
+/// accordingly, and pop the FPU stack.
+/// </summary>
+FPU/FUComIP 1  sti(source)                      (0xDF 0xE8+arg1) NONE fucomip
+
+/// <summary>
+/// Caculate the Cosine of ST(0) and
+/// store it in ST(0).
+/// </summary>
+FPU/FCos    0                                   (0xD9 0xFF)      NONE fcos
+
+/// <summary>
+/// Decrement the stack-top pointer.
+/// </summary>
+FPU/FDecStp 0                                   (0xD9 0xF6)      NONE fdecstp
+
+/// <summary>
+/// Divide two floating point values.
+/// </summary>
+FPU/FDiv    1  memf32(source)                   (0xD8 arg1[0x06])      DS   fdiv
+FPU/FDiv    1  memf64(source)                   (0xDC arg1[0x06])      DS   fdiv
+FPU/FDiv    2  sti(destination),   sti(source)  (evil["Invalid combination of registers! (One of them must be ST(0))"])  NONE fdiv
+FPU/FDiv    2  sti(destination),   sti(source)  (0xD8 0xF0+arg2) NONE fdiv   override([sti sti]  comp[arg1=0])
+FPU/FDiv    2  sti(destination),   sti(source)  (0xDC 0xF8+arg1) NONE fdiv   override([sti sti]  comp[arg2=0])
+
+/// <summary>
+/// Divide ST(i) by ST(0), store the
+/// result in ST(i) and pop the FPU
+/// stack.
+/// </summary>
+FPU/FDivP   1  sti(destination)                 (0xDE 0xF8+arg1) NONE fdivp
+
+/// <summary>
+/// Divide ST(0) by an integer in memory
+/// and store the result in ST(0).
+/// </summary>
+FPU/FIDiv   1  mem32(source)                    (0xDA arg1[0x06])      DS   fidiv
+FPU/FIDiv   1  mem16(source)                    (0xDE arg1[0x06])      DS   fidiv
+
+/// <summary>
+/// Reverse divide two floating point values.
+/// </summary>
+FPU/FDivR   1  memf32(source)                   (0xD8 arg1[0x07])      DS   fdivr
+FPU/FDivR   1  memf64(source)                   (0xDC arg1[0x07])      DS   fdivr
+FPU/FDivR   2  sti(destination),   sti(source)  (evil["Invalid combination of registers! (One of them must be ST(0))"])  NONE fdivr
+FPU/FDivR   2  sti(destination),   sti(source)  (0xD8 0xF8+arg2) NONE fdivr   override([sti sti]  comp[arg1=0])
+FPU/FDivR   2  sti(destination),   sti(source)  (0xDC 0xF0+arg1) NONE fdivr   override([sti sti]  comp[arg2=0])
+
+/// <summary>
+/// Divide ST(0) by ST(i), store the
+/// result in ST(i) and pop the FPU
+/// stack.
+/// </summary>
+FPU/FDivRP  1  sti(destination)                 (0xDE 0xF0+arg1) NONE fdivrp
+
+/// <summary>
+/// Divide ST(0) by an integer in memory
+/// and store the result in ST(0).
+/// </summary>
+FPU/FIDivR  1  mem32(source)                    (0xDA arg1[0x07])      DS   fidivr
+FPU/FIDivR  1  mem16(source)                    (0xDE arg1[0x07])      DS   fidivr
+
+/// <summary>
+/// Sets the tag for ST(i) to empty.
+/// </summary>
+FPU/FFree   1  sti(source)                      (0xDD 0xC0+arg1) NONE ffree
+
+/// <summary>
+/// Compare ST(0) with an integer
+/// in memory.
+/// </summary>
+FPU/FICom   1  mem32(source)                    (0xDE arg1[0x02])      DS   ficom
+FPU/FICom   1  mem16(source)                    (0xDA arg1[0x02])      DS   ficom
+/// <summary>
+/// Compare ST(0) with an integer
+/// in memory and pop the FPU stack.
+/// </summary>
+FPU/FIComP  1  mem32(source)                    (0xDE arg1[0x03])      DS   ficomp
+FPU/FIComP  1  mem16(source)                    (0xDA arg1[0x03])      DS   ficomp
+
+/// <summary>
+/// Load an integer from memory and
+/// push it onto the FPU stack.
+/// </summary>
+FPU/FILd    1  mem16(source)                    (0xDF arg1[0x00])      DS   fild
+FPU/FILd    1  mem32(source)                    (0xDB arg1[0x00])      DS   fild
+FPU/FILd    1  mem64(source)                    (0xDF arg1[0x05])      DS   fild
+
+/// <summary>
+/// Increment the stack-top pointer.
+/// </summary>
+FPU/FIncStp 0                                   (0xD9 0xF7)      NONE fincstp
+
+/// <summary>
+/// Initialize the FPU after checking
+/// for pending unmasked floating-point
+/// exceptions.
+/// </summary>
+FPU/FInit   0                                   (0x9B 0xDB 0xE3) NONE finit
+/// <summary>
+/// Initialize the FPU without checking
+/// for pending unmasked floating-point exceptions.
+/// </summary>
+FPU/FNInit  0                                   (0xDB 0xE3)      NONE fninit
+
+/// <summary>
+/// Store ST(0) into memory as an
+/// integer.
+/// </summary>
+FPU/FISt    1  mem16(destination)               (0xDF arg1[0x02])      DS   fist
+FPU/FISt    1  mem32(destination)               (0xDB arg1[0x02])      DS   fist
+/// <summary>
+/// Store ST(0) into memory as an
+/// integer and pop the FPU stack.
+/// </summary>
+FPU/FIStP   1  mem16(destination)               (0xDF arg1[0x03])      DS   fistp
+FPU/FIStP   1  mem32(destination)               (0xDB arg1[0x03])      DS   fistp
+FPU/FIStP   1  mem64(destination)               (0xDF arg1[0x07])      DS   fistp
+
+/// <summary>
+/// Push a floating point value
+/// onto the FPU stack.
+/// </summary>
+FPU/Fld     1  memf32(source)                   (0xD9 arg1[0x00])      DS   fld
+FPU/Fld     1  memf64(source)                   (0xDD arg1[0x00])      DS   fld
+FPU/Fld     1  memf80(source)                   (0xDB arg1[0x05])      DS   fld
+FPU/Fld     1  sti(source)                      (0xD9 0xC0+arg1) NONE fld
+
+/// <summary>
+/// Push +1.0 onto the FPU stack.
+/// </summary>
+FPU/Fld1    0                                   (0xD9 0xE8)      NONE fld1
+
+/// <summary>
+/// Push log base 2 of 10 onto
+/// the FPU stack.
+/// </summary>
+FPU/FldL2T  0                                   (0xD9 0xE9)      NONE fldl2t
+
+/// <summary>
+/// Push log base 2 of e onto
+/// the FPU stack.
+/// </summary>
+FPU/FldL2E  0                                   (0xD9 0xEA)      NONE fldl2e
+
+/// <summary>
+/// Push Pi onto the FPU stack.
+/// </summary>
+FPU/FldPi   0                                   (0xD9 0xEB)      NONE fldpi
+
+/// <summary>
+/// Push log base 10 of 2 onto
+/// the FPU stack.
+/// </summary>
+FPU/FldLg2  0                                   (0xD9 0xEC)      NONE fldlg2
+
+/// <summary>
+/// Push the natural log of 2
+/// onto the FPU stack.
+/// </summary>
+FPU/FldLn2  0                                   (0xD9 0xED)      NONE fldln2
+
+/// <summary>
+/// Push +0.0 onto the FPU stack.
+/// </summary>
+FPU/FldZ    0                                   (0xD9 0xEE)      NONE fldz
+
+/// <summary>
+/// Load FPU control word.
+/// </summary>
+FPU/FldCW   1  mem16(source)                    (0xD9 arg1[0x05])      DS   fldcw
+
+/// <summary>
+/// Load FPU environment.
+/// </summary>
+FPU/FldEnv  1  mem32(source)                    (0xD9 arg1[0x04])      DS   fldenv
+
+/// <summary>
+/// Multiply two floating-point numbers.
+/// </summary>
+FPU/FMul    1  memf32(source)                   (0xD8 arg1[0x01])      DS   fmul
+FPU/FMul    1  memf64(source)                   (0xDC arg1[0x01])      DS   fmul
+FPU/FMul    2  sti(destination),   sti(source)  (evil["Invalid combination of registers! (One of them must be ST(0))"])  NONE fmul
+FPU/FMul    2  sti(destination),   sti(source)  (0xD8 0xC8+arg2) NONE fmul   override([sti sti]  comp[arg1=0])
+FPU/FMul    2  sti(destination),   sti(source)  (0xDC 0xC8+arg1) NONE fmul   override([sti sti]  comp[arg2=0])
+
+/// <summary>
+/// Multiply ST(i) by ST(0), store
+/// the result in ST(i), and pop
+/// the FPU stack.
+/// </summary>
+FPU/FMulP   1  sti(destination)                 (0xDE 0xC8+arg1) NONE fmulp
+
+/// <summary>
+/// Multiply ST(0) by an integer
+/// in memory, and store the result
+/// in ST(0).
+/// </summary>
+FPU/FIMul   1  mem32(source)                    (0xDA arg1[0x01])      DS   fimul
+FPU/FIMul   1  mem16(source)                    (0xDE arg1[0x01])      DS   fimul
+
+/// <summary>
+/// Performs no operation.
+/// </summary>
+FPU/FNop    0                                   (0xD9 0xD0)      NONE fnop
+
+/// <summary>
+/// Calculates the arctangent of
+/// ST(1)/ST(0) and put the result
+/// in ST(1), then pop the FPU
+/// stack, meaning the result is
+/// available in ST(0).
+/// </summary>
+FPU/FpATan  0                                   (0xD9 0xF3)      NONE fpatan
+
+/// <summary>
+/// Calculates the remainder obtained
+/// from dividing ST(1) by ST(0), and
+/// stores it in ST(0).
+/// </summary>
+FPU/FpRem   0                                   (0xD9 0xF8)      NONE fprem
+
+/// <summary>
+/// Calculates the IEEE remainder
+/// obtained from dividing ST(1)
+/// by ST(0), and stores it in
+/// ST(0).
+/// </summary>
+FPU/FpRem1  0                                   (0xD9 0xF5)      NONE fprem1
+
+/// <summary>
+/// Calculate the tangent of ST(0),
+/// and store it in ST(0). Then push
+/// +1.0 onto the FPU stack, meaning
+/// the result of the tangent operation
+/// is avaliable in ST(1).
+/// </summary>
+FPU/FpTan   0                                   (0xD9 0xF2)      NONE fptan
+
+/// <summary>
+/// Round the value in ST(0) to an
+/// integer.
+/// </summary>
+FPU/FRndInt 0                                   (0xD9 0xFC)      NONE frndint
+
+/// <summary>
+/// Load the FPU state from a location
+/// in memory.
+/// </summary>
+FPU/FRStor  1  mem128(source)                   (0xDD arg1[0x04])      DS   frstor
+
+/// <summary>
+/// Store the FPU state at a location
+/// in memory after checking for pending
+/// unmasked floating-point exceptions,
+/// then re-initialize the FPU.
+/// </summary>
+FPU/FSave   1  mem128(destination)              (0x9B 0xDD arg1[0x06]) DS   fsave
+
+/// <summary>
+/// Store the FPU state at a location
+/// in memory without checking for pending
+/// unmasked floating-point exceptions,
+/// then re-initialize the FPU.
+/// </summary>
+FPU/FNSave  1  mem128(destination)              (0xDD arg1[0x06])      DS   fnsave
+
+/// <summary>
+/// Scale ST(0) by ST(1).
+/// </summary>
+FPU/FScale  0                                   (0xD9 0xFD)      NONE fscale
+
+/// <summary>
+/// Calculate the sine of ST(0)
+/// and store it in ST(0).
+/// </summary>
+FPU/FSin    0                                   (0xD9 0xFE)      NONE fsin
+
+/// <summary>
+/// Compute the sine and cosine
+/// of ST(0), store the sine in
+/// ST(0), and push the cosine
+/// onto the FPU stack, meaning
+/// the sine is available in ST(1)
+/// and the cosine is avaliable
+/// in ST(0).
+/// </summary>
+FPU/FSinCos 0                                   (0xD9 0xFB)      NONE fsincos
+
+/// <summary>
+/// Compute the square root of
+/// ST(0) and store it in ST(0).
+/// </summary>
+FPU/FSqrt   0                                   (0xD9 0xFA)      NONE fsqrt
+
+/// <summary>
+/// Store a floating-point value.
+/// </summary>
+FPU/FSt     1  memf32(destination)              (0xD9 arg1[0x02])      DS   fst
+FPU/FSt     1  memf64(destination)              (0xDD arg1[0x02])      DS   fst
+FPU/FSt     1  sti(destination)                 (0xDD 0xD0+arg1) NONE fst
+
+/// <summary>
+/// Store a floating-point value
+/// and pop the FPU stack.
+/// </summary>
+FPU/FStP    1  memf32(destination)              (0xD9 arg1[0x03])      DS   fstp
+FPU/FStP    1  memf64(destination)              (0xDD arg1[0x03])      DS   fstp
+FPU/FStP    1  memf80(destination)              (0xDB arg1[0x07])      DS   fstp
+FPU/FStP    1  sti(destination)                 (0xDD 0xD8+arg1) NONE fstp
+
+/// <summary>
+/// Store the FPU control word at
+/// a location in memory after checking
+/// for pending unmasked floating-point
+/// exceptions.
+/// </summary>
+FPU/FStCW   1  mem16(destination)               (0x9B 0xD9 arg1[0x07]) DS   fstcw
+/// <summary>
+/// Store the FPU control word at
+/// a location in memory without
+/// checking for pending unmasked
+/// floating-point exceptions.
+/// </summary>
+FPU/FNStCW  1  mem16(destination)               (0xD9 arg1[0x07])      DS   fnstcw
+
+/// <summary>
+/// Store the FPU environment at
+/// a location in memory after
+/// checking for pending unmasked
+/// floating-point exceptions.
+/// Then mask all floating-point
+/// exceptions.
+/// </summary>
+FPU/FStEnv  1  mem128(destination)              (0x9B 0xD9 arg1[0x06]) DS   fstenv
+/// <summary>
+/// Store the FPU environment at
+/// a location in memory without
+/// checking for pending unmasked
+/// floating-point exceptions.
+/// Then mask all floating-point
+/// exceptions.
+/// </summary>
+FPU/FNStEnv 1  mem128(destination)              (0xD9 arg1[0x06])      DS   fnstenv
+
+/// <summary>
+/// Store the FPU status word either
+/// at a location in memory or a register
+/// (AX is the only valid register)
+/// after checking for pending unmasked
+/// floating-point exceptions.
+/// </summary>
+FPU/FStSW   1  mem16(destination)               (0x9B 0xDD arg1[0x07]) DS   fstsw
+FPU/FStSW   1  r16(destination)                 (evil["The destination register can only be AX!"]) NONE fstsw
+FPU/FStSW   1  r16(destination)                 (0x9B 0xDF 0xE0) NONE fstsw    override([r16]  comp[arg1=AX])
+
+/// <summary>
+/// Store the FPU status word either
+/// at a location in memory or a register
+/// (AX is the only valid register)
+/// without checking for pending unmasked
+/// floating-point exceptions.
+/// </summary>
+FPU/FNStSW  1  mem16(destination)               (0xDD arg1[0x07])      DS   fnstsw
+FPU/FNStSW  1  r16(destination)                 (evil["The destination register can only be AX!"]) NONE fnstsw
+FPU/FNStSW  1  r16(destination)                 (0xDF 0xE0)      NONE fnstsw   override([r16]  comp[arg1=AX])
+
+/// <summary>
+/// Subtract two floating point values.
+/// </summary>
+FPU/FSub    1  memf32(source)                   (0xD8 arg1[0x04])      DS   fsub
+FPU/FSub    1  memf64(source)                   (0xDC arg1[0x04])      DS   fsub
+FPU/FSub    2  sti(destination),   sti(source)  (evil["Invalid combination of registers! (One of them must be ST(0))"])  NONE fsub
+FPU/FSub    2  sti(destination),   sti(source)  (0xD8 0xE0+arg2) NONE fsub     override([sti sti]  comp[arg1=0])
+FPU/FSub    2  sti(destination),   sti(source)  (0xDC 0xE8+arg1) NONE fsub     override([sti sti]  comp[arg2=0])
+
+/// <summary>
+/// Subtract ST(0) from ST(i), store the
+/// result in ST(1), then pop the FPU
+/// stack, making the results available
+/// in ST(0).
+/// </summary>
+FPU/FSubP   1  sti(destination)                 (0xDE 0xE8+arg1) NONE fsubp
+
+/// <summary>
+/// Subtract an integer in memory from
+/// ST(0) and store the result in ST(0).
+/// </summary>
+FPU/FISub   1  mem32(source)                    (0xDA arg1[0x04])      DS   fisub
+FPU/FISub   1  mem16(source)                    (0xDE arg1[0x04])      DS   fisub
+
+/// <summary>
+/// Reverse subtract two floating point values.
+/// </summary>
+FPU/FSubR   1  memf32(source)                   (0xD8 arg1[0x04])      DS   fsubr
+FPU/FSubR   1  memf64(source)                   (0xDC arg1[0x04])      DS   fsubr
+FPU/FSubR   2  sti(destination),   sti(source)  (evil["Invalid combination of registers! (One of them must be ST(0))"])  NONE fsubr
+FPU/FSubR   2  sti(destination),   sti(source)  (0xD8 0xE0+arg2) NONE fsubr   override([sti sti]  comp[arg1=0])
+FPU/FSubR   2  sti(destination),   sti(source)  (0xDC 0xE8+arg1) NONE fsubr   override([sti sti]  comp[arg2=0])
+
+/// <summary>
+/// Reverse subtract ST(i) from ST(0), store
+/// the result in ST(i), then pop the FPU
+/// stack, making the results available
+/// in ST(i - 1).
+/// </summary>
+FPU/FSubRP  1  sti(destination)                 (0xDE 0xE8+arg1) NONE fsubrp
+
+/// <summary>
+/// Reverse subtract ST(0) from an integer in
+/// memory and store the result in ST(0).
+/// </summary>
+FPU/FISubR  1  mem32(source)                    (0xDA arg1[0x04])      DS   fisubr
+FPU/FISubR  1  mem16(source)                    (0xDE arg1[0x04])      DS   fisubr
+
+/// <summary>
+/// Compare ST(0) with +0.0
+/// </summary>
+FPU/FTst    0                                   (0xD9 0xE4)      NONE ftst
+
+/// <summary>
+/// Perform an unordered comparison of 
+/// ST(0) to ST(i).
+/// </summary>
+FPU/FUCom   1  sti(source)                      (0xDD 0xE0+arg1) NONE fucom
+
+/// <summary>
+/// Perform an unordered comparison of
+/// ST(0) to ST(i) and pop the FPU stack.
+/// </summary>
+FPU/FUComP  1  sti(source)                      (0xD8 0xD8+arg1) NONE fucomp
+
+/// <summary>
+/// Perform an unordered comparison of
+/// ST(0) to ST(1) and pop the FPU stack
+/// twice.
+/// </summary>
+FPU/FUCompPP 0                                   (0xDE 0xD9)      NONE fucompp
+
+/// <summary>
+/// Check pending unmasked floating-point exceptions.
+/// </summary>
+FPU/FWait   0                                   (0x9B)           NONE fwait
+
+/// <summary>
+/// Classify the value in ST(0).
+/// </summary>
+FPU/FXam    0                                   (0xD9 0xE5)      NONE fxam
+
+/// <summary>
+/// Exchange the contents of ST(0) with
+/// ST(i).
+/// </summary>
+FPU/FXCh    1  sti(source)                      (0xD9 0xC8+arg1) NONE fxch
+
+/// <summary>
+/// Seperate the value in ST(0) into 
+/// exponent and significand, store
+/// the exponent into ST(0), then push
+/// the significand onto the FPU stack,
+/// meaning the exponent is available
+/// in ST(1), and the significand in ST(0).
+/// </summary>
+FPU/FXtract 0                                   (0xD9 0xF4)      NONE fxtract
+
+/// <summary>
+/// Caclulates the result of multiplying
+/// ST(1) by log base 2 of ST(0) and store
+/// it in ST(1), then pop the FPU stack,
+/// meaning the result is available in ST(0).
+/// </summary>
+FPU/FYL2X   0                                   (0xD9 0xF1)      NONE fyl2x
+
+/// <summary>
+/// Calculates the result of multiplying
+/// ST(1) by log base 2 of the sum of ST(0)
+/// and 1 and store it in ST(1), then pop the
+/// FPU stack, meaning the result is available
+/// in ST(0).
+/// </summary>
+FPU/FYL2XP1 0                                   (0xD9 0xF9)      NONE fyl2xp1
+
+
+

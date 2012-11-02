@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A79C233C-CD34-4333-A37E-AC0DE9F7169F}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Orvid.Assembler.x86.Tester</RootNamespace>
+    <AssemblyName>Orvid.Assembler.x86.Tester</AssemblyName>
+    <StartupObject>Orvid.Assembler.x86.Testing.MainClass</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Orvid.Assembler\Orvid.Assembler.csproj">
+      <Project>{C2974DD7-DBB7-438F-BA52-FDCB78A2E38C}</Project>
+      <Name>Orvid.Assembler</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Orvid.Assembler.x86\Orvid.Assembler.x86.csproj">
+      <Project>{807DCFA7-6C03-4F3B-B0BF-B92143E863B1}</Project>
+      <Name>Orvid.Assembler.x86</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Orvid.Trampoline\Orvid.Trampoline.ilproj">
+      <Project>{177E9549-57AD-4D5E-B8D2-7394181BE949}</Project>
+      <Name>Orvid.Trampoline</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Main.cs" />
+    <Compile Include="Win32ExecutableAllocation.cs" />
+    <Compile Include="ExecutableAllocation.cs" />
+    <Compile Include="UnixExecutableAllocation.cs" />
+    <Compile Include="F26Dot6.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+</Project>

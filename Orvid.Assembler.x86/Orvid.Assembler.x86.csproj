@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{807DCFA7-6C03-4F3B-B0BF-B92143E863B1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Orvid.Assembler.x86</RootNamespace>
+    <AssemblyName>Orvid.Assembler.x86</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+    <GenerateDocumentation>True</GenerateDocumentation>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="x86Instruction.cs" />
+    <Compile Include="x86Stream.cs" />
+    <Compile Include="x86Assembler.cs" />
+    <Compile Include="x86InstructionForm.cs" />
+    <Compile Include="x86Prefix.cs" />
+    <Compile Include="x86AddressingMode.cs" />
+    <Compile Include="x86AssemblySyntax.cs" />
+    <Compile Include="NamingHelper.cs" />
+    <Compile Include="x86Segment.cs" />
+    <Compile Include="x86ControlRegister.cs" />
+    <Compile Include="x86DebugRegister.cs" />
+    <Compile Include="ManualInstructions\Ret.cs" />
+    <Compile Include="ManualInstructions\Nop.cs" />
+    <Compile Include="..\Orvid.Assembler.x86.IstructionGen\bin\Debug\out\Orvid.Assembler.x86.cs">
+      <Link>Instructions\Orvid.Assembler.x86.cs</Link>
+    </Compile>
+    <Compile Include="..\Orvid.Assembler.x86.IstructionGen\bin\Debug\out\Orvid.Assembler.x86.FPU.cs">
+      <Link>Instructions\Orvid.Assembler.x86.FPU.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Orvid.Assembler\Orvid.Assembler.csproj">
+      <Project>{C2974DD7-DBB7-438F-BA52-FDCB78A2E38C}</Project>
+      <Name>Orvid.Assembler</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Instructions\" />
+    <Folder Include="ManualInstructions\" />
+  </ItemGroup>
+</Project>
