@@ -9,11 +9,6 @@ namespace Orvid.Assembler.x86
 		{
 		}
 
-		// General Note:
-		//    We cannot use BitConverter here because it uses the
-		//    endianness of the machine doing the converting.
-		//    X86 is little endian only.
-
 		/// <summary>
 		/// Writes a prefix to the stream.
 		/// </summary>

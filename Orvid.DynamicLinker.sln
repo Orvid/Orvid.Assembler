@@ -21,10 +21,17 @@ Project("{B4EC64DC-6D44-11DD-AAB0-C9A155D89593}") = "Orvid.Trampoline", "Orvid.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orvid.CodeDom", "Orvid.CodeDom\Orvid.CodeDom.csproj", "{6928EF5E-7C9B-40C0-81C5-19E205B91512}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "D", "D", "{21F622D1-972B-4E1F-B2C1-F2C1C20678EB}"
+EndProject
+Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "Orvid.Assembler.D", "D\Orvid.Assembler.D\Orvid.Assembler.D.dproj", "{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}"
+EndProject
+Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "Orvid.Assembler.x86.D", "D\Orvid.Assembler.x86.D\Orvid.Assembler.x86.D.dproj", "{87F92F09-0C54-4FAB-8471-DC71548249BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		Unittest|Any CPU = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{09559B09-62F3-4C8B-A543-92D49B2616B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -47,6 +54,12 @@ Global
 		{807DCFA7-6C03-4F3B-B0BF-B92143E863B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{807DCFA7-6C03-4F3B-B0BF-B92143E863B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{807DCFA7-6C03-4F3B-B0BF-B92143E863B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87F92F09-0C54-4FAB-8471-DC71548249BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87F92F09-0C54-4FAB-8471-DC71548249BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87F92F09-0C54-4FAB-8471-DC71548249BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87F92F09-0C54-4FAB-8471-DC71548249BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87F92F09-0C54-4FAB-8471-DC71548249BA}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
+		{87F92F09-0C54-4FAB-8471-DC71548249BA}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 		{99287C49-A763-4076-BE49-FB6093A13D7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{99287C49-A763-4076-BE49-FB6093A13D7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99287C49-A763-4076-BE49-FB6093A13D7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -55,6 +68,12 @@ Global
 		{A79C233C-CD34-4333-A37E-AC0DE9F7169F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A79C233C-CD34-4333-A37E-AC0DE9F7169F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A79C233C-CD34-4333-A37E-AC0DE9F7169F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 		{C2974DD7-DBB7-438F-BA52-FDCB78A2E38C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C2974DD7-DBB7-438F-BA52-FDCB78A2E38C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2974DD7-DBB7-438F-BA52-FDCB78A2E38C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -67,6 +86,10 @@ Global
 		{F0D854E1-7592-4CF8-AFCD-977465D3F1D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F0D854E1-7592-4CF8-AFCD-977465D3F1D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F0D854E1-7592-4CF8-AFCD-977465D3F1D2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B058C81C-9DAF-45D0-82F1-DF6D9E75507E} = {21F622D1-972B-4E1F-B2C1-F2C1C20678EB}
+		{87F92F09-0C54-4FAB-8471-DC71548249BA} = {21F622D1-972B-4E1F-B2C1-F2C1C20678EB}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Orvid.Assembler.x86.IstructionGen\Orvid.Assembler.x86.IstructionGen.csproj

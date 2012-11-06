@@ -1,16 +1,41 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Orvid.Assembler.x86.IstructionGen/InstructionForm.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="D/Orvid.Assembler.D/Orvid/Collections.d">
     <Files>
-      <File FileName="Orvid.Assembler.x86/x86Stream.cs" Line="67" Column="44" />
-      <File FileName="Orvid.Assembler.x86.IstructionGen/Main.cs" Line="13" Column="30" />
-      <File FileName="Orvid.Assembler.x86.IstructionGen/InstructionForm.cs" Line="241" Column="100" />
-      <File FileName="Orvid.Assembler.x86.IstructionGen/Instruction.cs" Line="372" Column="23" />
-      <File FileName="Orvid.Assembler.x86.IstructionGen/InstructionArgType.cs" Line="447" Column="88" />
-      <File FileName="Orvid.Assembler.x86.IstructionGen/Generator.cs" Line="1050" Column="14" />
-      <File FileName="Orvid.Assembler.x86.IstructionGen/x86.cpud" Line="818" Column="1" />
-      <File FileName="Orvid.CodeDom/CodeGenerators/CSharpCodeGenerator.cs" Line="97" Column="4" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/Main.cs" Line="135" Column="40" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/InstructionForm.cs" Line="297" Column="23" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/Instruction.cs" Line="347" Column="3" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/InstructionArgType.cs" Line="56" Column="52" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/Generator.cs" Line="1215" Column="88" />
+      <File FileName="Orvid.Assembler.x86.IstructionGen/x86.cpud" Line="19" Column="40" />
+      <File FileName="D/Orvid.Assembler.D/Orvid/Assembler/Core.d" Line="6" Column="2" />
+      <File FileName="D/Orvid.Assembler.x86.D/Orvid/Assembler/x86/Core.d" Line="24" Column="1" />
+      <File FileName="Orvid.Assembler.x86/x86Instruction.cs" Line="1" Column="1" />
+      <File FileName="D/Orvid.Assembler.D/Orvid/Collections.d" Line="10" Column="49" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="D" expanded="True">
+            <Node name="Orvid.Assembler.D" expanded="True">
+              <Node name="Orvid" expanded="True">
+                <Node name="Assembler" expanded="True" />
+                <Node name="Collections.d" selected="True" />
+              </Node>
+            </Node>
+            <Node name="Orvid.Assembler.x86.D" expanded="True">
+              <Node name="Orvid" expanded="True">
+                <Node name="Assembler" expanded="True">
+                  <Node name="x86" expanded="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+          <Node name="Orvid.Assembler.x86" expanded="True" />
+          <Node name="Orvid.Assembler.x86.IstructionGen" expanded="True" />
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

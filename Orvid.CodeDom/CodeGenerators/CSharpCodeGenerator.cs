@@ -294,7 +294,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			return value;
 		}
 		
-		private string DetermineTypeOutput(CodeTypeReference type)
+		protected virtual string DetermineTypeOutput(CodeTypeReference type)
 		{
 			string baseType = type.BaseType;
 			string text = baseType.ToLower(CultureInfo.InvariantCulture);

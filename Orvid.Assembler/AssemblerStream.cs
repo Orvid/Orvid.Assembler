@@ -5,7 +5,6 @@ namespace Orvid.Assembler
 {
 	public enum AssemblerEndianness
 	{
-#warning Need to support big endian properly at some point.
 		BigEndian,
 		LittleEndian,
 	}
@@ -21,11 +20,6 @@ namespace Orvid.Assembler
 			this.Endianness = endianness;
 		}
 		
-		// General Note:
-		//    We cannot use BitConverter here because it uses the
-		//    endianness of the machine doing the converting.
-		//    X86 is little endian only.
-		
 		/// <summary>
 		/// Writes an 8-bit immutable value to the stream.
 		/// </summary>
@@ -34,15 +28,32 @@ namespace Orvid.Assembler
 		{
 			WriteByte(imm);
 		}
-		
+
+
+		// General Note:
+		//    We cannot use BitConverter here because it uses the
+		//    endianness of the machine doing the converting.
+
+
 		/// <summary>
 		/// Writes a 16-bit immutable value to the stream.
 		/// </summary>
 		/// <param name='imm'>The immutable value to write.</param>
 		public void WriteImm16(ushort imm)
 		{
-			WriteByte((byte)(imm & 0xFF));
-			WriteByte((byte)((imm >> 8) & 0xFF));
+			switch (Endianness)
+			{
+				case AssemblerEndianness.LittleEndian:
+					WriteByte((byte)(imm & 0xFF));
+					WriteByte((byte)((imm >> 8) & 0xFF));
+					break;
+				case AssemblerEndianness.BigEndian:
+					WriteByte((byte)((imm >> 8) & 0xFF));
+					WriteByte((byte)(imm & 0xFF));
+					break;
+				default:
+					throw new Exception("Unknown endianness!");
+			}
 		}
 		
 		/// <summary>
@@ -51,10 +62,23 @@ namespace Orvid.Assembler
 		/// <param name='imm'>The immutable value to write.</param>
 		public void WriteImm32(uint imm)
 		{
-			WriteByte((byte)(imm & 0xFF));
-			WriteByte((byte)((imm >> 8) & 0xFF));
-			WriteByte((byte)((imm >> 16) & 0xFF));
-			WriteByte((byte)((imm >> 24) & 0xFF));
+			switch (Endianness)
+			{
+				case AssemblerEndianness.LittleEndian:
+					WriteByte((byte)(imm & 0xFF));
+					WriteByte((byte)((imm >> 8) & 0xFF));
+					WriteByte((byte)((imm >> 16) & 0xFF));
+					WriteByte((byte)((imm >> 24) & 0xFF));
+					break;
+				case AssemblerEndianness.BigEndian:
+					WriteByte((byte)((imm >> 24) & 0xFF));
+					WriteByte((byte)((imm >> 16) & 0xFF));
+					WriteByte((byte)((imm >> 8) & 0xFF));
+					WriteByte((byte)(imm & 0xFF));
+					break;
+				default:
+					throw new Exception("Unknown endianness!");
+			}
 		}
 		
 		/// <summary>

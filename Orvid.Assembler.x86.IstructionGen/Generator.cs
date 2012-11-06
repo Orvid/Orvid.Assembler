@@ -213,7 +213,9 @@ namespace Orvid.Assembler.x86.IstructionGen
 										tok = toks[curIdx];
 										if (tok.Type != TokenType.Identifier)
 											ThrowError("Expected an identifier representing the base type of the enum to generate!", tok);
-										EnumRegistryEntry ent = new EnumRegistryEntry(enumName, FieldTypeRegistry.GetType(tok.Value));
+										EnumRegistryEntry ent = new EnumRegistryEntry(enumName, FieldTypeRegistry.GetType(tok.Value), curDocList.Count > 0 ? curDocList : null);
+										if (curDocList.Count > 0)
+											curDocList = new List<string>(InitialCurDocListSize);
 										curIdx++;
 
 										tok = toks[curIdx];
@@ -230,9 +232,31 @@ namespace Orvid.Assembler.x86.IstructionGen
 										tok = toks[curIdx];
 										while (tok.Type != TokenType.RCurlBracket)
 										{
+											while(tok.Type == TokenType.DocumentationComment)
+											{
+												// We're not working from the main list,
+												// so we have to do these checks ourself.
+												if (tok.Value.Length >= 9 && tok.Value.Length <= 14)
+												{
+													string tmpS = tok.Value.ToLower();
+													if (tmpS == "<summary>" ||
+													    tmpS == "</summary>"
+													    )
+													{
+														curIdx++;
+														tok = toks[curIdx];
+														continue;
+													}
+												}
+												curDocList.Add(tok.Value);
+												curIdx++;
+												tok = toks[curIdx];
+											}
 											if (tok.Type != TokenType.Identifier)
 												ThrowError("Expected an identifier for the enum value!", tok);
-											ent.Members.Add(new EnumRegistryEntryMember(tok.Value, ""));
+											ent.Members.Add(new EnumRegistryEntryMember(tok.Value, "", curDocList.Count > 0 ? curDocList : null));
+											if (curDocList.Count > 0)
+												curDocList = new List<string>(InitialCurDocListSize);
 											curIdx++;
 
 											tok = toks[curIdx];
@@ -757,6 +781,18 @@ namespace Orvid.Assembler.x86.IstructionGen
 							}
 							break;
 						case TokenType.DocumentationComment:
+							if (tok.Value.Length >= 9 && tok.Value.Length <= 14)
+							{
+								string tmpS = tok.Value.ToLower();
+								if (tmpS == "<summary>" ||
+								    tmpS == "</summary>"
+								    )
+								{
+									// Ignore it.
+									curIdx++;
+									break;
+								}
+							}
 							curDocList.Add(tok.Value);
 							curIdx++;
 							break;
@@ -1092,16 +1128,6 @@ namespace Orvid.Assembler.x86.IstructionGen
 
 								foreach(string s in curDocList)
 								{
-									if (s.Length >= 9 && s.Length <= 14)
-									{
-										string tmpS = s.ToLower();
-										if (tmpS == "<summary>" ||
-										    tmpS == "</summary>"
-										    )
-										{
-											continue;
-										}
-									}
 									finalDocList.Add(s);
 								}
 								instr.LinesOfDocumentation = finalDocList;
@@ -1186,56 +1212,33 @@ namespace Orvid.Assembler.x86.IstructionGen
 			InstructionArgTypeRegistry.RegisterType(newType);
 		}
 
-		private List<CodeCompileUnit> CompileUnits = new List<CodeCompileUnit>();
-		private Dictionary<string, CodeNamespace> Namespaces = new Dictionary<string, CodeNamespace>();
-		private CodeNamespace GetNamespace(string name)
-		{
-			CodeNamespace nm;
-			if (!Namespaces.TryGetValue(name, out nm))
-			{
-				CodeCompileUnit cu = new CodeCompileUnit();
-				CodeNamespace n = new CodeNamespace(name);
-				n.Imports.Add(new CodeNamespaceImport("System"));
-				if (name != Namespace)
-				{
-					n.Imports.Add(new CodeNamespaceImport(Namespace));
-				}
-				cu.Namespaces.Add(n);
-				CompileUnits.Add(cu);
-				Namespaces[name] = n;
-				nm = n;
-			}
-			return nm;
-		}
+		public static LanguageProviders.LanguageProvider LanguageProvider;
 
 		public void WriteInstructions(string destDirectory)
 		{
-			StaticTypeReferences.InitializeTypes();
-			EnumRegistry.WriteEnums(GetNamespace(Namespace));
+			LanguageProvider = new LanguageProviders.CSharpLanguageProvider();
+			LanguageProvider.RootNamespace = Namespace;
 
+			StaticTypeReferences.InitializeTypes();
+			EnumRegistry.WriteEnums(LanguageProvider.GetNamespace(Namespace));
+
+			string prevNamespaceName = null;
+			CodeNamespace prevNamespace = null;
 			foreach (Instruction i in Instructions.Values)
 			{
-				CodeNamespace n = GetNamespace(Namespace + (i.GetNamespaceExtension() == "" ? "" : "." + i.GetNamespaceExtension()));
+				string newNamespaceName = Namespace + (i.GetNamespaceExtension() == "" ? "" : "." + i.GetNamespaceExtension());
+				CodeNamespace n = prevNamespaceName == newNamespaceName ? prevNamespace : LanguageProvider.GetNamespace(newNamespaceName);
 				i.Write(destDirectory, n);
+				prevNamespace = n;
+				prevNamespaceName = newNamespaceName;
 			}
 
-			var cgO = new CodeGeneratorOptions();
-			cgO.IndentString = "\t";
-			cgO.BracingStyle = "C";
-			cgO.ElseOnClosing = false;
-			ICodeGenerator gen = new CSharpCodeGenerator();
+			// This has to be done after the instructions are written,
+			// because otherwise they haven't requested their forms yet.
+			InstructionFormEnumRegistry.WriteFormEnum(LanguageProvider.GetNamespace(Namespace));
 
-			if (!Directory.Exists(destDirectory))
-				Directory.CreateDirectory(destDirectory);
-			
-			foreach (CodeCompileUnit cu in CompileUnits)
-			{
-				var tw = new StreamWriter(destDirectory + "/" + cu.Namespaces[0].Name + ".cs");
-				gen.GenerateCodeFromCompileUnit(cu, tw, cgO);
-				tw.Flush();
-				tw.Close();
-				
-			}
+			LanguageProvider.WriteToFile(destDirectory);
+			LanguageProvider.Finish(destDirectory);
 		}
 	}
 }

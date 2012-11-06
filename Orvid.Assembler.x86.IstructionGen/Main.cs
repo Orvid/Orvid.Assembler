@@ -101,7 +101,7 @@ namespace Orvid.Assembler.x86.IstructionGen
 			g.WriteInstructions(outDir);
 			ProfilingStop(stop);
 			ProfilingAdd(stop, ref TotalMSElapsed);
-			ProfilingWrite("Writing out the intstructions took " + stop.ElapsedMilliseconds.ToString() + "MS.");
+			ProfilingWrite("Writing out the instructions took " + stop.ElapsedMilliseconds.ToString() + "MS.");
 			ProfilingReset(stop);
 #if CatchExceptions
 			}
@@ -132,6 +132,7 @@ namespace Orvid.Assembler.x86.IstructionGen
 			DocAliasRegistry.Reset();
 			PrefixRegistry.Reset();
 			EnumRegistry.Reset();
+			InstructionFormEnumRegistry.Reset();
 			strm.Position = 0;
 			GC.Collect();
 		}

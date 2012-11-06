@@ -291,6 +291,7 @@ namespace Orvid.Assembler.x86.IstructionGen
 					);
 					cas.Statements.Add(new CodeBreakStatement());
 					s.Cases.Add(cas);
+					InstructionFormEnumRegistry.RequestForm(sizeFormPairs[i].Value);
 				}
 
 				string exSzs = "";
@@ -330,6 +331,7 @@ namespace Orvid.Assembler.x86.IstructionGen
 						new CodeFieldReferenceExpression(StaticTypeReferences.InstructionFormExpression, GetInstructionCaseString())
 					)
 				);
+				InstructionFormEnumRegistry.RequestForm(GetInstructionCaseString());
 			}
 		}
 
@@ -549,22 +551,12 @@ namespace Orvid.Assembler.x86.IstructionGen
 			}
 			else
 			{
-				return new CodeBinaryOperatorExpression(
-					new CodePrimitiveExpression("0x"),
-					CodeBinaryOperatorType.StringConcat,
-					new CodeMethodInvokeExpression(
-						new CodeMethodInvokeExpression(
-							new CodeFieldReferenceExpression(
-								new CodeThisReferenceExpression(),
-								GetArgName(FieldTypeRegistry.UInt.ID, 1, argIdx)
-							),
-							"ToString",
-							new CodePrimitiveExpression("X")
-						),
-						"PadLeft",
-						new CodePrimitiveExpression(padSize),
-						new CodePrimitiveExpression('0')
-					)
+				return Generator.LanguageProvider.GetPaddedHexToString(
+					new CodeFieldReferenceExpression(
+						new CodeThisReferenceExpression(),
+						GetArgName(FieldTypeRegistry.UInt.ID, 1, argIdx)
+					),
+					padSize
 				);
 			}
 		NonImm:

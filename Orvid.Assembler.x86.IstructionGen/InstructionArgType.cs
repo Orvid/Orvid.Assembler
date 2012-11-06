@@ -645,22 +645,12 @@ namespace Orvid.Assembler.x86.IstructionGen
 			}
 			else
 			{
-				return new CodeBinaryOperatorExpression(
-					new CodePrimitiveExpression("0x"),
-					CodeBinaryOperatorType.StringConcat,
-					new CodeMethodInvokeExpression(
-						new CodeMethodInvokeExpression(
-							new CodeFieldReferenceExpression(
-								new CodeThisReferenceExpression(),
-								frm.GetArgName(FieldTypeRegistry.UInt.ID, 1, argIdx)
-							),
-							"ToString",
-							new CodePrimitiveExpression("X")
-						),
-						"PadLeft",
-						new CodePrimitiveExpression(padSize),
-						new CodePrimitiveExpression('0')
-					)
+				return Generator.LanguageProvider.GetPaddedHexToString(
+					new CodeFieldReferenceExpression(
+						new CodeThisReferenceExpression(),
+						frm.GetArgName(FieldTypeRegistry.UInt.ID, 1, argIdx)
+					),
+					padSize
 				);
 			}
 		}

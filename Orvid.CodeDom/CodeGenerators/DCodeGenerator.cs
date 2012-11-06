@@ -12,6 +12,8 @@ namespace Orvid.CodeDom.CodeGenerators
 {
 	public class DCodeGenerator : CSharpCodeGenerator
 	{
+#warning Need to deal with documentation at some point.
+
 		protected override void GenerateCastExpression(CodeCastExpression expression)
 		{
 			TextWriter output = base.Output;
@@ -69,6 +71,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.Write("module ");
 			base.Output.Write(ns.Name);
 			base.Output.WriteLine(";");
+			base.Output.WriteLine();
 		}
 		protected override void GenerateNamespaceEnd(CodeNamespace ns) { }
 
@@ -85,6 +88,40 @@ namespace Orvid.CodeDom.CodeGenerators
 				base.Output.Write("~");
 			else
 				base.OutputOperator(op);
+		}
+
+		protected override void GenerateMethodInvokeExpression(CodeMethodInvokeExpression expression)
+		{
+			if (expression.Parameters.Count == 0 && expression.Method.MethodName == "ToString")
+			{
+				base.Output.Write("to!string(");
+				if (expression.Method.TargetObject != null)
+				{
+					GenerateExpression(expression.Method.TargetObject);
+				}
+				base.Output.Write(")");
+			}
+			else
+			{
+				base.GenerateMethodInvokeExpression(expression);
+			}
+		}
+
+		protected override string DetermineTypeOutput(CodeTypeReference type)
+		{
+			switch (type.BaseType.ToLower(CultureInfo.InvariantCulture))
+			{
+				case "system.byte":
+					return "ubyte";
+				case "system.sbyte":
+					return "byte";
+				case "system.exception":
+					return "Exception";
+				case "system.argumentoutofrangeexception":
+					return "Exception";
+				default:
+					return base.DetermineTypeOutput(type);
+			}
 		}
 
 		protected override void OutputTypeAttributes(CodeTypeDeclaration declaration)

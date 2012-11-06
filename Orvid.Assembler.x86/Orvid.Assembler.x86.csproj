@@ -34,14 +34,9 @@
     <Compile Include="x86Instruction.cs" />
     <Compile Include="x86Stream.cs" />
     <Compile Include="x86Assembler.cs" />
-    <Compile Include="x86InstructionForm.cs" />
     <Compile Include="x86Prefix.cs" />
     <Compile Include="x86AddressingMode.cs" />
-    <Compile Include="x86AssemblySyntax.cs" />
     <Compile Include="NamingHelper.cs" />
-    <Compile Include="x86Segment.cs" />
-    <Compile Include="x86ControlRegister.cs" />
-    <Compile Include="x86DebugRegister.cs" />
     <Compile Include="ManualInstructions\Ret.cs" />
     <Compile Include="ManualInstructions\Nop.cs" />
     <Compile Include="..\Orvid.Assembler.x86.IstructionGen\bin\Debug\out\Orvid.Assembler.x86.cs">

@@ -58,6 +58,10 @@
     <Compile Include="StringCaser.cs" />
     <Compile Include="ArrayExtensions.cs" />
     <Compile Include="EnumRegistry.cs" />
+    <Compile Include="InstructionFormEnumRegistry.cs" />
+    <Compile Include="LanguageProviders\LanguageProvider.cs" />
+    <Compile Include="LanguageProviders\CSharpLanguageProvider.cs" />
+    <Compile Include="LanguageProviders\DLangaugeProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -86,5 +90,8 @@
       <Project>{6928EF5E-7C9B-40C0-81C5-19E205B91512}</Project>
       <Name>Orvid.CodeDom</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="LanguageProviders\" />
   </ItemGroup>
 </Project>
