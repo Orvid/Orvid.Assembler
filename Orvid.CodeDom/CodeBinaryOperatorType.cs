@@ -53,5 +53,10 @@ namespace Orvid.CodeDom
 		GreaterThan = 15,
 		GreaterThanOrEqual = 16,
 		StringConcat = 17,
+		// EXTENSION: The shift left, right, and sign extended right shift were
+		//            added here.
+		ShiftLeft = 18,
+		ShiftRight = 19,
+		SignExtendedShiftRight = 20,
 	}
 }

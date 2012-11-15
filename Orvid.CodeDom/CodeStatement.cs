@@ -39,51 +39,11 @@ namespace Orvid.CodeDom
 	public class CodeStatement
 		: CodeObject
 	{
-		private CodeLinePragma linePragma;
-		CodeDirectiveCollection endDirectives;
-		CodeDirectiveCollection startDirectives;
-		
 		//
 		// Constructors
 		//
 		public CodeStatement()
 		{
 		}
-		
-		//
-		// Properties
-		//
-		public CodeLinePragma LinePragma
-		{
-			get
-			{
-				return linePragma;
-			}
-			set
-			{
-				linePragma = value;
-			}
-		}
-
-		public CodeDirectiveCollection EndDirectives
-		{
-			get
-			{
-				if (endDirectives == null)
-					endDirectives = new CodeDirectiveCollection();
-				return endDirectives;
-			}
-		}
-
-		public CodeDirectiveCollection StartDirectives
-		{
-			get
-			{
-				if (startDirectives == null)
-					startDirectives = new CodeDirectiveCollection();
-				return startDirectives;
-			}
-		}
-
 	}
 }

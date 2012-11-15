@@ -1,0 +1,247 @@
+cpu xCore
+
+
+namespace Orvid.Assembler.xCore
+
+#register Type xCoreStream
+#register Type xCoreInstruction
+#register Type xCoreAssembler
+#register Type xCoreRegister     reg_
+
+#define InstructionFormClass  xCoreInstructionForm
+#define StreamClass           xCoreStream
+#define InstructionClass      xCoreInstruction
+#define AssemblerClass        xCoreAssembler
+
+#define Enum xCoreRegister byte
+{
+	R0,
+	R1,
+	R2,
+	R3,
+	R4,
+	R5,
+	R6,
+	R7,
+	R8,
+	R9,
+	R10,
+	R11,
+}
+
+// This architecture is actually the
+// reason that bit patterns are supported
+// in the first place. The following is
+// the reason why they were needed.
+// 
+// The biggest difficult in supporting bit
+// patterns wasn't writing the code to support
+// them, but rather designing them in a way
+// that would be usable and make sense.
+// (if you think the first one is crazy,
+// look a bit farther down.)
+// 
+// i1[5] means the first 5 bits in the first argument
+// i1[5..0] means the bits at indexes 0 to 5, aka. the first 6 bits, of the first argument.
+// 
+// The length specifier after a literal is optional, it will
+// default to the length being 0 to the highest bit set in the
+// literal, for all except for a binary literal, where it will
+// use the literal length of the binary number. (aka. leading 0's on a binary
+// number get included in it's length)
+// A literal 0 will have a length of 1.
+// 
+
+// Also, these are in the same order they are in the specs, please keep it that way.
+#define BitPattern        r3     (i1[5] (+ (* i2[3..2] 9) (+ (* i3[3..2] 3) i4[3..2]) )[5] i2[1..0] i3[1..0] i4[1..0])
+#define BitPattern        lr3    ($r3[i1=0b11111])  (i4[5] 0b11111 0b1 0b0 i5[4])
+#define BitPatternAlias   r2us   r3
+#define BitPatternAlias   lr2us  lr3
+
+#define BitPattern        ru6    (i1[5] i2[1] i3[4] i4[6])
+#define BitPattern        lru6   (0b11110 0b0 i4[15..6]) ($ru6[i4=i4[5..0]])
+#define BitPatternAlias   u6     ru6
+#define BitPatternAlias   lu6    lru6
+
+#define BitPattern        u10    (i1[5] i2[1] i3[10])
+#define BitPattern        lu10   (0b11110 0b0 i3[19..10]) ($u10[i3=i3[9..0]])
+
+#define BitPattern        r2     (i1[5] (+ (* i3[3..2] 3) (+ i4[3..2] 27))[4..0] (+ (* i3[3..2] 3) (+ i4[3..2] 27))[5..5] i2[1] i3[1..0] i4[1..0])
+#define BitPatternAlias   r2r    r2
+#define BitPattern        lr2    ($r2[i1=0b11111]) (i4[5] 0b11111 0b1 0b0 i5[4])
+#define BitPatternAlias   lr2r   lr2
+#define BitPatternAlias   rus    r2
+
+#define BitPattern        r1     (i1[5] 0b11111 0b1 i2[1] i3[4])
+#define BitPatternAlias   r0     r1
+
+// Unfortunately, as we have no other way of knowing that the
+// args are going to be requested, we need to add the extra 0
+// length selector at the end. 0 Length selectors don't get written
+// to the output stream.
+#define BitPattern        lr4    ($r3[i1=0b11111]) ($r1[]) (i6[0])
+#define BitPattern        lr5    ($r3[i1=0b11111]) ($r2[]) (i7[0])
+#define BitPattern        lr6    ($r3[i1=0b11111]) ($r3[]) (i7[0])
+
+
+#register DocAlias     Common           "The {argName}"
+#register DocAlias     Register         "${Common} register."
+
+#register SizelessType Reg
+
+
+#define arg(TriReg, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.r3(Stream, arg1, Register, arg2, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(TriRegL, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.lr3(Stream, Register, arg3, arg4, arg1, arg2)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(BiRegSImm, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.r2us(Stream, arg1, Register, arg2, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(BiRegSImmL, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.lr2us(Stream, Register, arg3, arg4, arg1, arg2)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(Reg6Imm, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.ru6(Stream, arg1, arg2, Register, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(Reg16Imm, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.lru6(Stream, arg1, arg2, Register, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(Imm6, , Imm, ) as Byte(Value, DocAlias(Imm))
+{
+	Write BitPatterns.ru6(Stream, arg1, arg2, arg3, Value)
+	Read  ToString(Value)
+	AsArg DirectCast(Value, byte)
+}
+
+#define arg(Imm6L, , Imm, ) as UShort(Value, DocAlias(Imm))
+{
+	Write BitPatterns.lru6(Stream, arg1, arg2, arg3, Value)
+	Read  ToString(Value)
+	AsArg DirectCast(Value, ushort)
+}
+
+#define arg(Imm10, , Imm, ) as UShort(Value, DocAlias(Imm))
+{
+	Write BitPatterns.u10(Stream, arg1, arg2, Value)
+	Read  ToString(Value)
+	AsArg DirectCast(Value, ushort)
+}
+
+#define arg(Imm10L, , Imm, ) as UInt(Value, DocAlias(Imm))
+{
+	Write BitPatterns.lu10(Stream, arg1, arg2, Value)
+	Read  ToString(Value)
+	AsArg DirectCast(Value, uint)
+}
+
+#define arg(BiReg, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.r2(Stream, arg1, arg2, Register, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(BiRegRev, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.r2(Stream, arg1, arg2, arg3, Register)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(BiRegL, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.lr2(Stream, arg1, Register, arg4, arg2, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(BiRegRevL, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.lr2(Stream, arg4, Register, arg1, arg2, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(RegImm, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.rus(Stream, arg1, arg2, Register, arg3)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+#define arg(Reg, , Reg, ) as xCoreRegister(Register, DocAlias(Register))
+{
+	Write BitPatterns.r1(Stream, arg1, arg2, Register)
+	Read  ToString(Register)
+	AsArg DirectCast(Register, byte)
+}
+
+// TODO: How to represent no operands?
+
+
+/// <summary>
+/// Add 2 unsigned integers together.
+/// </summary>
+Add   3 TriReg(destination),     Reg(sourceA),  Reg(sourceB)       (arg1[0b00010, arg2, arg3])               add
+
+/// <summary>
+/// Add 2 unsigned integers together,
+/// one of the integers being a small
+/// imm value. (in the range of 0-11)
+/// </summary>
+AddI  3 BiRegSImm(destination),  Reg(source),   imm6(imm)          (arg1[0b10010, arg2, arg3])               addi
+
+/// <summary>
+/// Calculate the bitwise AND of two words.
+/// </summary>
+And   3 TriReg(destination),     Reg(sourceA),  Reg(sourceB)       (arg1[0b00111, arg2, arg3])               and
+
+
+AndNot 2 BiReg(destination),     Reg(source)                       (arg1[0b00101, 0b0, arg2])                andnot
+
+AShr  3 TriReg(destination),     Reg(sourceA),  Reg(sourceB)       (arg1[0b00010, 0b1100, arg2, arg3])       ashr
+
+AShrI 3 BiRegSImmL(destination), Reg(source),   imm6(imm)          (arg1[0b10010, 0b1100, arg2, arg3])       ashri
+
+Bau   1 Reg(source)                                                (arg1[0b00100, 0b1])                      bau
+
+BitRev 2 BiRegL(destination),    Reg(source)                       (arg1[0b0, arg2, 0b00000, 0b1100])        bitrev
+
+Bla   1 Reg(source)                                                (arg1[0b00100, 0b0])                      bla
+
+
+
+
+/// <summary>
+/// Incorporate a word into a Cyclic Redundancy Checksum.
+/// </summary>
+Crc   3 TriRegL(destination),    Reg(data),     Reg(polynomial)    (arg1[0b10101, 0b1100, arg2, arg3])       crc
+
+
+

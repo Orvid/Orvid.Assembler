@@ -34,11 +34,36 @@
     <Compile Include="Instruction.cs" />
     <Compile Include="TrampolineGenerator.cs" />
     <Compile Include="AssemblerStream.cs" />
+    <Compile Include="x86\Label.cs" />
+    <Compile Include="x86\NamingHelper.cs" />
+    <Compile Include="x86\x86Assembler.cs" />
+    <Compile Include="x86\x86Instruction.cs" />
+    <Compile Include="x86\x86Stream.cs" />
+    <Compile Include="x86\ManualInstructions\Ret.cs" />
+    <Compile Include="x86\ManualInstructions\Nop.cs" />
+    <Compile Include="xCore\NamingHelper.cs" />
+    <Compile Include="xCore\xCoreAssembler.cs" />
+    <Compile Include="xCore\xCoreInstruction.cs" />
+    <Compile Include="xCore\xCoreStream.cs" />
+    <Compile Include="..\Generated\Orvid.Assembler.xCore.cs">
+      <Link>xCore\Orvid.Assembler.xCore.cs</Link>
+    </Compile>
+    <Compile Include="..\Generated\Orvid.Assembler.x86.cs">
+      <Link>x86\Instructions\Orvid.Assembler.x86.cs</Link>
+    </Compile>
+    <Compile Include="..\Generated\Orvid.Assembler.x86.FPU.cs">
+      <Link>x86\Instructions\Orvid.Assembler.x86.FPU.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Orvid.DynamicLinker\Orvid.DynamicLinker.csproj">
       <Project>{F0D854E1-7592-4CF8-AFCD-977465D3F1D2}</Project>
       <Name>Orvid.DynamicLinker</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="x86\" />
+    <Folder Include="xCore\" />
+    <Folder Include="x86\Instructions\" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B058C81C-9DAF-45D0-82F1-DF6D9E75507E}</ProjectGuid>
+    <PreferOneStepBuild>True</PreferOneStepBuild>
+    <UseDefaultCompiler>True</UseDefaultCompiler>
+    <IncrementalLinking>True</IncrementalLinking>
+    <Compiler>DMD</Compiler>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <OutputPath>bin\Debug</OutputPath>
+    <Target>SharedLibrary</Target>
+    <OutputName>Orvid.Assembler</OutputName>
+    <ObjectsDirectory>obj/Debug</ObjectsDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release</OutputPath>
+    <Target>SharedLibrary</Target>
+    <OutputName>Orvid.Assembler</OutputName>
+    <ObjectsDirectory>obj/Release</ObjectsDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Orvid\Assembler\Core.d" />
+    <Compile Include="Orvid\Collections.d" />
+    <Compile Include="Orvid\Assembler\x86\Core.d" />
+    <Compile Include="Orvid\Assembler\xCore\Core.d" />
+    <Compile Include="..\..\Generated\Orvid\Assembler\xCore\Instructions\Core.d">
+      <Link>Orvid\Assembler\xCore\Instructions\Core.d</Link>
+    </Compile>
+    <Compile Include="..\..\Generated\Orvid\Assembler\xCore\Instructions\Manifest.d">
+      <Link>Orvid\Assembler\xCore\Instructions\Manifest.d</Link>
+    </Compile>
+    <Compile Include="..\..\Generated\Orvid\Assembler\x86\Instructions\Core.d">
+      <Link>Orvid\Assembler\x86\Instructions\Core.d</Link>
+    </Compile>
+    <Compile Include="..\..\Generated\Orvid\Assembler\x86\Instructions\FPU.d">
+      <Link>Orvid\Assembler\x86\Instructions\FPU.d</Link>
+    </Compile>
+    <Compile Include="..\..\Generated\Orvid\Assembler\x86\Instructions\Manifest.d">
+      <Link>Orvid\Assembler\x86\Instructions\Manifest.d</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Orvid\" />
+    <Folder Include="Orvid\Assembler\" />
+    <Folder Include="Orvid\Assembler\xCore\" />
+    <Folder Include="Orvid\Assembler\xCore\Instructions\" />
+    <Folder Include="Orvid\Assembler\x86\Instructions\" />
+  </ItemGroup>
+</Project>

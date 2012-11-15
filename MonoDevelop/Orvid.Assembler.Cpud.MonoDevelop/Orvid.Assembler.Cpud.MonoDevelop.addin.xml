@@ -1,0 +1,33 @@
+<Addin namespace   = "Orvid.Assembler.Cpud.MonoDevelop"
+       id          = "CpudMonoDevelopSupport"
+       name        = "Cpud Support"
+       author      = "Orvid King"
+       copyright   = "None"
+       url         = "none"
+       description = "Provides syntax highlighting to cpud files."
+       category    = "Language bindings"
+       version     = "5.9">
+        
+	<Dependencies>
+		<Addin id="::MonoDevelop.Ide" version="3.0"/>
+	</Dependencies>
+	
+	<Extension path="/MonoDevelop/Core/MimeTypes">
+		<MimeType id="text/orvid-cpud" _description="cpud files" isText="true">
+			<File pattern="*.cpud" />
+		</MimeType>
+	</Extension>
+	
+	<Extension path="/MonoDevelop/Ide/TextEditorExtensions">
+		<Class fileExtensions=".cpud" class = "Orvid.Assembler.Cpud.MonoDevelop.CpudTextEditorExtension" />
+	</Extension>
+	
+	<Extension path="/MonoDevelop/SourceEditor2/CustomModes">
+		<SyntaxMode mimeTypes="text/orvid-cpud" class="Orvid.Assembler.Cpud.MonoDevelop.CpudSyntaxMode" />
+	</Extension>
+	
+	<Extension path="/MonoDevelop/SourceEditor2/SyntaxModes">
+		<Templates resource="CpudSyntaxMode.xml" />
+	</Extension>
+	
+</Addin>

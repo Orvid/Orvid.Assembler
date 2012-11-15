@@ -40,10 +40,6 @@
       <Project>{F0D854E1-7592-4CF8-AFCD-977465D3F1D2}</Project>
       <Name>Orvid.DynamicLinker</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Orvid.Assembler.x86\Orvid.Assembler.x86.csproj">
-      <Project>{807DCFA7-6C03-4F3B-B0BF-B92143E863B1}</Project>
-      <Name>Orvid.Assembler.x86</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Orvid.Assembler\Orvid.Assembler.csproj">
       <Project>{C2974DD7-DBB7-438F-BA52-FDCB78A2E38C}</Project>
       <Name>Orvid.Assembler</Name>

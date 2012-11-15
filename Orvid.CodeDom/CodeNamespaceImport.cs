@@ -37,7 +37,6 @@ namespace Orvid.CodeDom
 	public class CodeNamespaceImport
 		: CodeObject
 	{
-		private CodeLinePragma linePragma;
 		private string nameSpace;
 		
 		//
@@ -55,18 +54,6 @@ namespace Orvid.CodeDom
 		//
 		// Properties
 		//
-		public CodeLinePragma LinePragma
-		{
-			get
-			{
-				return linePragma;
-			}
-			set
-			{
-				linePragma = value;
-			}
-		}
-
 		public string Namespace
 		{
 			get

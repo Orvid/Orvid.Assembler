@@ -72,7 +72,22 @@ namespace Orvid.CodeDom.CodeGenerators
 			output.WriteLine(';');
 		}
 
-		protected override void GenerateDocumentationSummaryNode(CodeDocumentationSummaryNode n)
+		protected override void OutputDocumentation(CodeDocumentationNodeCollection docs)
+		{
+			foreach (CodeDocumentationNode node in docs)
+			{
+				if (node is CodeDocumentationSummaryNode)
+					OutputDocumentationSummaryNode((CodeDocumentationSummaryNode)node);
+				else if (node is CodeDocumentationParameterNode)
+					OutputDocumentationParameterNode((CodeDocumentationParameterNode)node);
+				else if (node is CodeDocumentationReturnNode)
+					OutputDocumentationReturnNode((CodeDocumentationReturnNode)node);
+				else
+					throw new Exception("Unknown documentation node type!");
+			}
+		}
+
+		protected virtual void OutputDocumentationSummaryNode(CodeDocumentationSummaryNode n)
 		{
 			TextWriter output = base.Output;
 			output.WriteLine("/// <summary>");
@@ -84,7 +99,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			output.WriteLine("/// </summary>");
 		}
 
-		protected override void GenerateDocumentationParameterNode(CodeDocumentationParameterNode n)
+		protected virtual void OutputDocumentationParameterNode(CodeDocumentationParameterNode n)
 		{
 			base.Output.Write("/// <param name=\"");
 			base.Output.Write(n.ParamName);
@@ -93,7 +108,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.WriteLine("</param>");
 		}
 
-		protected override void GenerateDocumentationReturnNode(CodeDocumentationReturnNode n)
+		protected virtual void OutputDocumentationReturnNode(CodeDocumentationReturnNode n)
 		{
 			base.Output.Write("/// <returns>");
 			base.Output.Write(n.Summary);
@@ -465,26 +480,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			}
 			output.WriteLine(';');
 		}
-		
-		protected override void GenerateAttachEventStatement(CodeAttachEventStatement statement)
-		{
-			TextWriter output = base.Output;
-			this.GenerateEventReferenceExpression(statement.Event);
-			output.Write(" += ");
-			base.GenerateExpression(statement.Listener);
-			output.WriteLine(';');
-		}
-		
-		protected override void GenerateAttributeDeclarationsEnd(CodeAttributeDeclarationCollection attributes)
-		{
-			base.Output.Write(']');
-		}
-		
-		protected override void GenerateAttributeDeclarationsStart(CodeAttributeDeclarationCollection attributes)
-		{
-			base.Output.Write('[');
-		}
-		
+
 		protected override void GenerateBaseReferenceExpression(CodeBaseReferenceExpression expression)
 		{
 			base.Output.Write("base");
@@ -492,7 +488,8 @@ namespace Orvid.CodeDom.CodeGenerators
 		
 		protected override void GenerateCastExpression(CodeCastExpression expression)
 		{
-			// CLEANUP: This has been cleaned up so that the code it generates looks better.
+			// CLEANUP: This has been cleaned up so that the code it generates looks better, 
+			//          it will also generate chained casts if it's able to.
 			TextWriter output = base.Output;
 			if (expression.NeedsGrouping)
 				output.Write("(");
@@ -567,101 +564,26 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.Write('\'');
 		}
 		
-		private void GenerateCodeChecksumPragma(CodeChecksumPragma pragma)
-		{
-			base.Output.Write("#pragma checksum ");
-			base.Output.Write(this.QuoteSnippetString(pragma.FileName));
-			base.Output.Write(" \"");
-			base.Output.Write(pragma.ChecksumAlgorithmId.ToString("B"));
-			base.Output.Write("\" \"");
-			if (pragma.ChecksumData != null)
-			{
-				byte[] checksumData = pragma.ChecksumData;
-				for (int i = 0; i < checksumData.Length; i++)
-				{
-					byte b = checksumData[i];
-					base.Output.Write(b.ToString("X2"));
-				}
-			}
-			base.Output.WriteLine("\"");
-		}
-		
-		private void GenerateCodeRegionDirective(CodeRegionDirective region)
-		{
-			CodeRegionMode regionMode = region.RegionMode;
-			if (regionMode == CodeRegionMode.Start)
-			{
-				base.Output.Write("#region ");
-				base.Output.WriteLine(region.RegionText);
-				return;
-			}
-			if (regionMode == CodeRegionMode.End)
-			{
-				base.Output.WriteLine("#endregion");
-				return;
-			}
-		}
-		
-		protected override void GenerateComment(CodeComment comment)
-		{
-			TextWriter output = base.Output;
-			string value;
-			if (comment.DocComment)
-			{
-				value = "///";
-			}
-			else
-			{
-				value = "//";
-			}
-			output.Write(value);
-			output.Write(' ');
-			string text = comment.Text;
-			for (int i = 0; i < text.Length; i++)
-			{
-				output.Write(text[i]);
-				if (text[i] == '\r')
-				{
-					if (i >= text.Length - 1 || text[i + 1] != '\n')
-					{
-						output.Write(value);
-					}
-				}
-				else
-				{
-					if (text[i] == '\n')
-					{
-						output.Write(value);
-					}
-				}
-			}
-			output.WriteLine();
-		}
-		
 		protected override void GenerateCompileUnit(CodeCompileUnit compileUnit)
 		{
 			this.GenerateCompileUnitStart(compileUnit);
 			this.GenerateGlobalNamespace(compileUnit);
-			if (compileUnit.AssemblyCustomAttributes.Count > 0)
-			{
-				this.OutputAttributes(compileUnit.AssemblyCustomAttributes, "assembly: ", false);
-				base.Output.WriteLine(string.Empty);
-			}
 			this.GenerateLocalNamespaces(compileUnit);
 			this.GenerateCompileUnitEnd(compileUnit);
 		}
 		
 		protected override void GenerateCompileUnitStart(CodeCompileUnit compileUnit)
 		{
-			this.GenerateComment(new CodeComment("------------------------------------------------------------------------------"));
-			this.GenerateComment(new CodeComment(" <autogenerated>"));
-			this.GenerateComment(new CodeComment("     This code was generated by a tool."));
-			this.GenerateComment(new CodeComment("     Mono Runtime Version: " + Environment.Version));
-			this.GenerateComment(new CodeComment(string.Empty));
-			this.GenerateComment(new CodeComment("     Changes to this file may cause incorrect behavior and will be lost if "));
-			this.GenerateComment(new CodeComment("     the code is regenerated."));
-			this.GenerateComment(new CodeComment(" </autogenerated>"));
-			this.GenerateComment(new CodeComment("------------------------------------------------------------------------------"));
+			var output = base.Output;
+			output.WriteLine("// ------------------------------------------------------------------------------");
+			output.WriteLine("//  <autogenerated>");
+			output.WriteLine("//      This code was generated by a tool.");
+			output.WriteLine("//      Mono Runtime Version: " + Environment.Version);
+			output.WriteLine("// ");
+			output.WriteLine("//      Changes to this file may cause incorrect behavior and will be lost if ");
+			output.WriteLine("//      the code is regenerated.");
+			output.WriteLine("//  </autogenerated>");
+			output.WriteLine("// ------------------------------------------------------------------------------");
 			base.Output.WriteLine();
 			base.GenerateCompileUnitStart(compileUnit);
 		}
@@ -728,7 +650,6 @@ namespace Orvid.CodeDom.CodeGenerators
 			{
 				return;
 			}
-			this.OutputAttributes(constructor.CustomAttributes, null, false);
 			this.OutputMemberAccessModifier(constructor.Attributes);
 			base.Output.Write(this.GetSafeName(base.CurrentTypeName) + "(");
 			this.OutputParameters(constructor.Parameters);
@@ -767,68 +688,8 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.Write(')');
 		}
 		
-		protected override void GenerateDelegateCreateExpression(CodeDelegateCreateExpression expression)
-		{
-			TextWriter output = base.Output;
-			output.Write("new ");
-			this.OutputType(expression.DelegateType);
-			output.Write('(');
-			CodeExpression targetObject = expression.TargetObject;
-			if (targetObject != null)
-			{
-				base.GenerateExpression(targetObject);
-				base.Output.Write('.');
-			}
-			output.Write(this.GetSafeName(expression.MethodName));
-			output.Write(')');
-		}
-		
-		protected override void GenerateDelegateInvokeExpression(CodeDelegateInvokeExpression expression)
-		{
-			if (expression.TargetObject != null)
-			{
-				base.GenerateExpression(expression.TargetObject);
-			}
-			base.Output.Write('(');
-			this.OutputExpressionList(expression.Parameters);
-			base.Output.Write(')');
-		}
-		
-		protected override void GenerateDirectives(CodeDirectiveCollection directives)
-		{
-			IEnumerator enumerator = directives.GetEnumerator();
-			try
-			{
-				while (enumerator.MoveNext())
-				{
-					CodeDirective codeDirective = (CodeDirective)enumerator.Current;
-					if (codeDirective is CodeChecksumPragma)
-					{
-						this.GenerateCodeChecksumPragma((CodeChecksumPragma)codeDirective);
-					}
-					else
-					{
-						if (!(codeDirective is CodeRegionDirective))
-						{
-							throw new NotImplementedException("Unknown CodeDirective");
-						}
-						this.GenerateCodeRegionDirective((CodeRegionDirective)codeDirective);
-					}
-				}
-			}
-			finally
-			{
-				IDisposable disposable;
-				if ((disposable = (enumerator as IDisposable)) != null)
-				{
-					disposable.Dispose();
-				}
-			}
-		}
-		
 		protected override void GenerateEntryPointMethod(CodeEntryPointMethod method, CodeTypeDeclaration declaration)
 		{
-			this.OutputAttributes(method.CustomAttributes, null, false);
 			base.Output.Write("public static ");
 			this.OutputType(method.ReturnType);
 			base.Output.Write(" Main()");
@@ -837,39 +698,6 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.GenerateStatements(method.Statements);
 			base.Indent--;
 			base.Output.WriteLine("}");
-		}
-		
-		protected override void GenerateEvent(CodeMemberEvent eventRef, CodeTypeDeclaration declaration)
-		{
-			if (base.IsCurrentDelegate || base.IsCurrentEnum)
-			{
-				return;
-			}
-			this.OutputAttributes(eventRef.CustomAttributes, null, false);
-			if (eventRef.PrivateImplementationType == null)
-			{
-				this.OutputMemberAccessModifier(eventRef.Attributes);
-			}
-			base.Output.Write("event ");
-			if (eventRef.PrivateImplementationType != null)
-			{
-				this.OutputTypeNamePair(eventRef.Type, eventRef.PrivateImplementationType.BaseType + "." + eventRef.Name);
-			}
-			else
-			{
-				this.OutputTypeNamePair(eventRef.Type, this.GetSafeName(eventRef.Name));
-			}
-			base.Output.WriteLine(';');
-		}
-		
-		protected override void GenerateEventReferenceExpression(CodeEventReferenceExpression expression)
-		{
-			if (expression.TargetObject != null)
-			{
-				base.GenerateExpression(expression.TargetObject);
-				base.Output.Write('.');
-			}
-			base.Output.Write(this.GetSafeName(expression.EventName));
 		}
 		
 		protected override void GenerateExpressionStatement(CodeExpressionStatement statement)
@@ -889,7 +717,6 @@ namespace Orvid.CodeDom.CodeGenerators
 				return;
 			}
 			TextWriter output = base.Output;
-			this.OutputAttributes(field.CustomAttributes, null, false);
 			if (base.IsCurrentEnum)
 			{
 				base.Output.Write(this.GetSafeName(field.Name));
@@ -1075,24 +902,6 @@ namespace Orvid.CodeDom.CodeGenerators
 			}
 		}
 		
-		protected override void GenerateLinePragmaEnd(CodeLinePragma linePragma)
-		{
-			base.Output.WriteLine();
-			base.Output.WriteLine("#line default");
-			base.Output.WriteLine("#line hidden");
-		}
-		
-		protected override void GenerateLinePragmaStart(CodeLinePragma linePragma)
-		{
-			base.Output.WriteLine();
-			base.Output.Write("#line ");
-			base.Output.Write(linePragma.LineNumber);
-			base.Output.Write(" \"");
-			base.Output.Write(linePragma.FileName);
-			base.Output.Write("\"");
-			base.Output.WriteLine();
-		}
-		
 		private void GenerateLocalNamespaces(CodeCompileUnit compileUnit)
 		{
 			IEnumerator enumerator = compileUnit.Namespaces.GetEnumerator();
@@ -1124,8 +933,6 @@ namespace Orvid.CodeDom.CodeGenerators
 				return;
 			}
 			TextWriter output = base.Output;
-			this.OutputAttributes(method.CustomAttributes, null, false);
-			this.OutputAttributes(method.ReturnTypeCustomAttributes, "return: ", false);
 			MemberAttributes attributes = method.Attributes;
 			if (!base.IsCurrentInterface)
 			{
@@ -1253,7 +1060,6 @@ namespace Orvid.CodeDom.CodeGenerators
 		
 		protected override void GenerateParameterDeclarationExpression(CodeParameterDeclarationExpression e)
 		{
-			this.OutputAttributes(e.CustomAttributes, null, true);
 			this.OutputDirection(e.Direction);
 			this.OutputType(e.Type);
 			base.Output.Write(' ');
@@ -1265,7 +1071,8 @@ namespace Orvid.CodeDom.CodeGenerators
 			if (e.Value is byte)
 			{
 				byte val = (byte)e.Value;
-				base.Output.Write("0x" + val.ToString("X").PadLeft(2, '0'));
+				base.Output.Write("0x");
+				base.Output.Write(val.ToString("X").PadLeft(2, '0'));
 			}
 			else if (e.Value is char)
 			{
@@ -1279,8 +1086,16 @@ namespace Orvid.CodeDom.CodeGenerators
 			else if (e.Value is uint)
 			{
 				uint num2 = (uint)e.Value;
-				base.Output.Write(num2.ToString(CultureInfo.InvariantCulture));
-				base.Output.Write("u");
+				if (e.PrintAsHex)
+				{
+					base.Output.Write("0x");
+					base.Output.Write(num2.ToString("X").PadLeft(2, '0'));
+				}
+				else
+				{
+					base.Output.Write(num2.ToString(CultureInfo.InvariantCulture));
+					base.Output.Write("u");
+				}
 			}
 			else if (e.Value is ulong)
 			{
@@ -1324,7 +1139,6 @@ namespace Orvid.CodeDom.CodeGenerators
 				return;
 			}
 			TextWriter output = base.Output;
-			this.OutputAttributes(property.CustomAttributes, null, false);
 			MemberAttributes attributes = property.Attributes;
 			if (!base.IsCurrentInterface)
 			{
@@ -1410,31 +1224,12 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.Write("value");
 		}
 		
-		protected override void GenerateRemoveEventStatement(CodeRemoveEventStatement statement)
-		{
-			TextWriter output = base.Output;
-			this.GenerateEventReferenceExpression(statement.Event);
-			output.Write(" -= ");
-			base.GenerateExpression(statement.Listener);
-			output.WriteLine(';');
-		}
-		
 		protected override void GenerateSingleFloatValue(float f)
 		{
 			base.GenerateSingleFloatValue(f);
 			base.Output.Write('F');
 		}
-		
-		protected override void GenerateSnippetExpression(CodeSnippetExpression expression)
-		{
-			base.Output.Write(expression.Value);
-		}
-		
-		protected override void GenerateSnippetMember(CodeSnippetTypeMember member)
-		{
-			base.Output.Write(member.Text);
-		}
-		
+
 		protected override void GenerateThisReferenceExpression(CodeThisReferenceExpression expression)
 		{
 			base.Output.Write("this");
@@ -1519,7 +1314,6 @@ namespace Orvid.CodeDom.CodeGenerators
 			{
 				return;
 			}
-			this.OutputAttributes(constructor.CustomAttributes, null, false);
 			base.Output.Write("static " + this.GetSafeName(base.CurrentTypeName) + "()");
 			this.OutputStartBrace();
 			base.Indent++;
@@ -1547,7 +1341,6 @@ namespace Orvid.CodeDom.CodeGenerators
 		protected override void GenerateTypeStart(CodeTypeDeclaration declaration)
 		{
 			TextWriter output = base.Output;
-			this.OutputAttributes(declaration.CustomAttributes, null, false);
 			if (!base.IsCurrentDelegate)
 			{
 				this.OutputTypeAttributes(declaration);
@@ -1608,7 +1401,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.Write(this.GetSafeName(expression.VariableName));
 		}
 		
-		protected string GetSafeName(string id)
+		protected virtual string GetSafeName(string id)
 		{
 			if (CSharpCodeGenerator.keywordsTable == null)
 			{
@@ -1703,84 +1496,6 @@ namespace Orvid.CodeDom.CodeGenerators
 			return true;
 		}
 		
-		private void OutputAttributeDeclaration(CodeAttributeDeclaration attribute)
-		{
-			base.Output.Write(attribute.Name.Replace('+', '.'));
-			base.Output.Write('(');
-			IEnumerator enumerator = attribute.Arguments.GetEnumerator();
-			if (enumerator.MoveNext())
-			{
-				CodeAttributeArgument argument = (CodeAttributeArgument)enumerator.Current;
-				this.OutputAttributeArgument(argument);
-				while (enumerator.MoveNext())
-				{
-					base.Output.Write(", ");
-					argument = (CodeAttributeArgument)enumerator.Current;
-					this.OutputAttributeArgument(argument);
-				}
-			}
-			base.Output.Write(')');
-		}
-		
-		protected void OutputAttributes(CodeAttributeDeclarationCollection attributes, string prefix, bool inline)
-		{
-			bool flag = false;
-			IEnumerator enumerator = attributes.GetEnumerator();
-			try
-			{
-				while (enumerator.MoveNext())
-				{
-					CodeAttributeDeclaration codeAttributeDeclaration = (CodeAttributeDeclaration)enumerator.Current;
-					if (codeAttributeDeclaration.Name == "System.ParamArrayAttribute")
-					{
-						flag = true;
-					}
-					else
-					{
-						this.GenerateAttributeDeclarationsStart(attributes);
-						if (prefix != null)
-						{
-							base.Output.Write(prefix);
-						}
-						this.OutputAttributeDeclaration(codeAttributeDeclaration);
-						this.GenerateAttributeDeclarationsEnd(attributes);
-						if (inline)
-						{
-							base.Output.Write(" ");
-						}
-						else
-						{
-							base.Output.WriteLine();
-						}
-					}
-				}
-			}
-			finally
-			{
-				IDisposable disposable;
-				if ((disposable = (enumerator as IDisposable)) != null)
-				{
-					disposable.Dispose();
-				}
-			}
-			if (flag)
-			{
-				if (prefix != null)
-				{
-					base.Output.Write(prefix);
-				}
-				base.Output.Write("params");
-				if (inline)
-				{
-					base.Output.Write(" ");
-				}
-				else
-				{
-					base.Output.WriteLine();
-				}
-			}
-		}
-		
 		protected override void OutputFieldScopeModifier(MemberAttributes attributes)
 		{
 			MemberAttributes memberAttributes = attributes & MemberAttributes.ScopeMask;
@@ -1788,12 +1503,13 @@ namespace Orvid.CodeDom.CodeGenerators
 			{
 				base.Output.Write("static ");
 			}
-			else
+			else if (memberAttributes == MemberAttributes.Const)
 			{
-				if (memberAttributes == MemberAttributes.Const)
-				{
-					base.Output.Write("const ");
-				}
+				base.Output.Write("const ");
+			}
+			else if (memberAttributes == MemberAttributes.Final)
+			{
+				base.Output.Write("readonly ");
 			}
 		}
 		
@@ -1850,15 +1566,10 @@ namespace Orvid.CodeDom.CodeGenerators
 					base.Output.Write("override ");
 					break;
 				default:
-				{
-					MemberAttributes memberAttributes = attributes & MemberAttributes.AccessMask;
-					if (memberAttributes == MemberAttributes.Assembly || memberAttributes == MemberAttributes.Family || memberAttributes == MemberAttributes.Public)
-					{
-						base.Output.Write("virtual ");
-					}
 					break;
-				}
 			}
+			if ((attributes & MemberAttributes.Virtual) == MemberAttributes.Virtual)
+				base.Output.Write("virtual ");
 		}
 		
 		protected void OutputStartBrace()
@@ -1930,12 +1641,16 @@ namespace Orvid.CodeDom.CodeGenerators
 				output.Write("new ");
 			}
 			// BUGFIX: This previously was not checked, producing a non-sealed class when
-			//         a sealed one was expected.
+			//         a sealed one was expected. The same goes for static.
 			bool wasFinal = false;
-			if ((declaration.Attributes & MemberAttributes.Final) == MemberAttributes.Final)
+			if ((declaration.Attributes & MemberAttributes.ScopeMask) == MemberAttributes.Final)
 			{
 				wasFinal = true;
 				output.Write("sealed ");
+			}
+			else if ((declaration.Attributes & MemberAttributes.ScopeMask) == MemberAttributes.Static)
+			{
+				output.Write("static ");
 			}
 			if (declaration.IsStruct)
 			{
@@ -1989,7 +1704,7 @@ namespace Orvid.CodeDom.CodeGenerators
 			}
 		}
 
-		protected override string QuoteSnippetString(string value)
+		protected override string EscapeString(string value)
 		{
 			string text = value.Replace("\\", "\\\\");
 			text = text.Replace("\"", "\\\"");

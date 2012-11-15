@@ -133,19 +133,5 @@ namespace Orvid.CodeDom.Compiler
 				properties[index] = value;
 			}
 		}
-
-		[ComVisible (false)]
-		public bool VerbatimOrder
-		{
-			get
-			{
-				object o = properties["VerbatimOrder"];
-				return ((o == null) ? false : (bool)o);
-			}
-			set
-			{
-				properties["VerbatimOrder"] = value;
-			}
-		}
 	}
 }

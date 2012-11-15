@@ -36,7 +36,6 @@ namespace Orvid.CodeDom
 	public class CodeTypeParameter: CodeObject
 	{
 		CodeTypeReferenceCollection constraints;
-		CodeAttributeDeclarationCollection customAttributes;
 		bool hasConstructorConstraint;
 		string name;
 
@@ -56,16 +55,6 @@ namespace Orvid.CodeDom
 				if (constraints == null)
 					constraints = new CodeTypeReferenceCollection();
 				return constraints;
-			}
-		}
-
-		public CodeAttributeDeclarationCollection CustomAttributes
-		{
-			get
-			{
-				if (customAttributes == null)
-					customAttributes = new CodeAttributeDeclarationCollection();
-				return customAttributes;
 			}
 		}
 

@@ -39,7 +39,6 @@ namespace Orvid.CodeDom
 	public class CodeCompileUnit
 		: CodeObject
 	{
-		private CodeAttributeDeclarationCollection attributes;
 		private CodeNamespaceCollection namespaces;
 		private StringCollection assemblies;
 
@@ -53,17 +52,6 @@ namespace Orvid.CodeDom
 		//
 		// Properties
 		//
-		public CodeAttributeDeclarationCollection AssemblyCustomAttributes
-		{
-			get
-			{
-				if (attributes == null)
-					attributes = 
-						new CodeAttributeDeclarationCollection();
-				return attributes;
-			}
-		}
-
 		public CodeNamespaceCollection Namespaces
 		{
 			get
@@ -81,29 +69,6 @@ namespace Orvid.CodeDom
 				if (assemblies == null)
 					assemblies = new StringCollection();
 				return assemblies;
-			}
-		}
-
-		CodeDirectiveCollection startDirectives;
-		CodeDirectiveCollection endDirectives;
-
-		public CodeDirectiveCollection StartDirectives
-		{
-			get
-			{
-				if (startDirectives == null)
-					startDirectives = new CodeDirectiveCollection();
-				return startDirectives;
-			}
-		}
-
-		public CodeDirectiveCollection EndDirectives
-		{
-			get
-			{
-				if (endDirectives == null)
-					endDirectives = new CodeDirectiveCollection();
-				return endDirectives;
 			}
 		}
 	}

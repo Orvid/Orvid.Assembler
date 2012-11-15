@@ -41,11 +41,6 @@ namespace Orvid.CodeDom
 	{
 		private string name;
 		private MemberAttributes attributes;
-		private CodeCommentStatementCollection comments;
-		private CodeAttributeDeclarationCollection customAttributes;
-		private CodeLinePragma linePragma;
-		CodeDirectiveCollection endDirectives;
-		CodeDirectiveCollection startDirectives;
 
 
 		// EXTENDED
@@ -75,42 +70,6 @@ namespace Orvid.CodeDom
 			}
 		}
 
-		public CodeCommentStatementCollection Comments
-		{
-			get
-			{
-				if (comments == null)
-					comments = new CodeCommentStatementCollection();
-				return comments;
-			}
-		}
-		
-		public CodeAttributeDeclarationCollection CustomAttributes
-		{
-			get
-			{
-				if (customAttributes == null)
-					customAttributes = new CodeAttributeDeclarationCollection();
-				return customAttributes;
-			}
-			set
-			{
-				customAttributes = value;
-			}
-		}
-
-		public CodeLinePragma LinePragma
-		{
-			get
-			{
-				return linePragma;
-			}
-			set
-			{
-				linePragma = value;
-			}
-		}
-
 		public string Name
 		{
 			get
@@ -122,26 +81,6 @@ namespace Orvid.CodeDom
 			set
 			{
 				name = value;
-			}
-		}
-
-		public CodeDirectiveCollection EndDirectives
-		{
-			get
-			{
-				if (endDirectives == null)
-					endDirectives = new CodeDirectiveCollection();
-				return endDirectives;
-			}
-		}
-
-		public CodeDirectiveCollection StartDirectives
-		{
-			get
-			{
-				if (startDirectives == null)
-					startDirectives = new CodeDirectiveCollection();
-				return startDirectives;
 			}
 		}
 	}

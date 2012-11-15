@@ -35,16 +35,13 @@ namespace Orvid.CodeDom
 	[Serializable]
 	[ClassInterface(ClassInterfaceType.AutoDispatch)]
 	[ComVisible(true)]
-	public class CodeMemberMethod
-		: CodeTypeMember
+	public class CodeMemberMethod : CodeTypeMember
 	{
 		private CodeTypeReferenceCollection implementationTypes;
 		private CodeParameterDeclarationExpressionCollection parameters;
 		private CodeTypeReference privateImplements;
 		private CodeTypeReference returnType;
 		private CodeStatementCollection statements;
-		private CodeAttributeDeclarationCollection returnAttributes;
-		//int populated;
 
 		CodeTypeParameterCollection typeParameters;
 		//
@@ -64,8 +61,6 @@ namespace Orvid.CodeDom
 				if (implementationTypes == null)
 				{
 					implementationTypes = new CodeTypeReferenceCollection();
-					if (PopulateImplementationTypes != null)
-						PopulateImplementationTypes(this, EventArgs.Empty);
 				}
 				return implementationTypes;
 			}
@@ -78,8 +73,6 @@ namespace Orvid.CodeDom
 				if (parameters == null)
 				{
 					parameters = new CodeParameterDeclarationExpressionCollection();
-					if (PopulateParameters != null)
-						PopulateParameters(this, EventArgs.Empty);
 				}
 				return parameters;
 			}
@@ -118,21 +111,8 @@ namespace Orvid.CodeDom
 				if (statements == null)
 				{
 					statements = new CodeStatementCollection();
-					if (PopulateStatements != null)
-						PopulateStatements(this, EventArgs.Empty);
 				}
 				return statements;
-			}
-		}
-
-		public CodeAttributeDeclarationCollection ReturnTypeCustomAttributes
-		{
-			get
-			{
-				if (returnAttributes == null)
-					returnAttributes = new CodeAttributeDeclarationCollection();
-				
-				return returnAttributes;
 			}
 		}
 
@@ -146,13 +126,6 @@ namespace Orvid.CodeDom
 				return typeParameters;
 			}
 		}
-
-		//
-		// Events
-		//
-		public event EventHandler PopulateImplementationTypes;
-		public event EventHandler PopulateParameters;
-		public event EventHandler PopulateStatements;
 
 		//
 		// ICodeDomVisitor method

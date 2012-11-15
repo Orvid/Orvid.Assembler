@@ -36,7 +36,6 @@ namespace Orvid.CodeDom
 	public class CodeParameterDeclarationExpression
 		: CodeExpression
 	{
-		private CodeAttributeDeclarationCollection customAttributes;
 		private FieldDirection direction;
 		private string name;
 		private CodeTypeReference type;
@@ -69,20 +68,6 @@ namespace Orvid.CodeDom
 		//
 		// Properties
 		//
-		public CodeAttributeDeclarationCollection CustomAttributes
-		{
-			get
-			{
-				if (customAttributes == null)
-					customAttributes = new CodeAttributeDeclarationCollection();
-				return customAttributes;
-			}
-			set
-			{
-				customAttributes = value;
-			}
-		}
-
 		public FieldDirection Direction
 		{
 			get

@@ -1,0 +1,28 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Orvid.Assembler.InstructionGen/Main.cs">
+    <Files>
+      <File FileName="Orvid.Assembler.InstructionGen/Main.cs" Line="17" Column="23" />
+      <File FileName="Orvid.Assembler.InstructionGen/InstructionForm.cs" Line="6" Column="41" />
+      <File FileName="Orvid.Assembler.InstructionGen/Instruction.cs" Line="7" Column="41" />
+      <File FileName="Orvid.Assembler.InstructionGen/InstructionArgType.cs" Line="6" Column="41" />
+      <File FileName="Orvid.Assembler.InstructionGen/Generator.cs" Line="10" Column="41" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True" selected="True">
+          <Node name="Languages" expanded="True">
+            <Node name="Orvid.Assembler.Cpp" expanded="True" />
+          </Node>
+          <Node name="Orvid.Assembler.InstructionGen" expanded="True" />
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
+    <Watch file="Orvid.Assembler.x86.IstructionGen/RawParser.cs" line="214" offsetX="1059" offsetY="3408" expression="toks" liveUpdate="False" />
+  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
+</Properties>

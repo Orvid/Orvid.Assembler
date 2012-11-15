@@ -39,6 +39,11 @@ namespace Orvid.CodeDom
 	{
 		private object value;
 
+		// EXTENDED: This was added so it is possible to specify
+		//           explicitly that this value should be written
+		//           as a hex value. (it only has any effect on a uint value)
+		public bool PrintAsHex { get; set; }
+
 		//
 		// Constructors
 		//

@@ -13,11 +13,6 @@ namespace Orvid.CodeDom
 			this.ParamName = paramName;
 			this.Summary = summary;
 		}
-
-		internal override void Accept(ICodeDomVisitor visitor)
-		{
-			visitor.Visit(this);
-		}
 	}
 }
 

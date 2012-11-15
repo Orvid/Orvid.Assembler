@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SyntaxMode name="CPUD" mimeTypes="text/orvid-cpud">
+	<Property name="LineComment">//</Property>
+	<Delimiters>.=#(){}[] ,</Delimiters>
+	<EolSpan color="comment.doc"  rule="XmlDocumentation" tagColor="comment.tag.doc" >///</EolSpan>
+	<EolSpan color="comment.line" rule="Comment"          tagColor="comment.tag.line">//</EolSpan>
+	<EolSpan color="text.preprocessor" rule="NamespaceDeclaration" tagColor="string">namespace</EolSpan>
+	<EolSpan color="text" rule="Info" tagColor="text.preprocessor.keyword">#</EolSpan>
+	
+	<Span color="string.double" rule="String" stopateol="true" escape='\'>
+		<Begin>"</Begin>
+		<End>"</End>
+	</Span>
+	
+	<!-- Begin Describing (the valid arguments and their formats) -->
+	
+	<Keywords color="keyword" ignorecase="false">
+		<Word>DirectCast</Word>
+		<Word>ToString</Word>
+		<Word>byte</Word>
+		<Word>ushort</Word>
+		<Word>uint</Word>
+		<Word>int</Word>
+	</Keywords>
+	
+	<Keywords color="string" ignorecase="false">
+		<Word>AsArg</Word>
+		<Word>Write</Word>
+		<Word>Read</Word>
+		<Word>Size</Word>
+		<Word>Expand</Word>
+		<Word>RequiresSeg</Word>
+	</Keywords>
+	
+	<Keywords color="keyword.semantic.type" ignorecase="false">
+		<!-- Built-in Arguments -->
+		<Word>ParentAssembler</Word>
+		<Word>NamingHelper</Word>
+		<Word>Segment</Word>
+		<Word>Stream</Word>
+		<Word>BitPatterns</Word>
+	</Keywords>
+
+	<Rule name="Info" color="text">
+		<Keywords color="text.preprocessor.keyword" ignorecase="false">
+			<Word>define</Word>
+			<Word>register</Word>
+		</Keywords>
+		
+		<Keywords color="keyword" ignorecase="false">
+			<Word>as</Word>
+			<Word>arg</Word>
+		</Keywords>
+		
+		<Match color="text.markup">CSharpNumber</Match>
+		<Match color="text.markup">0b[01]+</Match>
+		<Match color="keyword">i[0-9]+</Match>
+		<Match color="text.preprocessor">\$[a-zA-Z0-9_]+</Match>
+		
+		<Keywords color="string" ignorecase="false">
+			<Word>*</Word>
+			<Word>+</Word>
+			<Word>=</Word>
+			<Word>.</Word>
+		</Keywords>
+		
+		<Keywords color="keyword.semantic.type" ignorecase="false">
+			<Word>Invalid</Word>
+			
+			<!-- #define -->
+			<Word>StreamClass</Word>
+			<Word>InstructionClass</Word>
+			<Word>AssemblerClass</Word>
+			<Word>PrefixClass</Word>
+			<Word>InstructionFormClass</Word>
+			<Word>AssemblySyntaxClass</Word>
+			<Word>Segment</Word>
+			<Word>ArgAlias</Word>
+			<Word>BitPattern</Word>
+			<Word>BitPatternAlias</Word>
+			<Word>Enum</Word>
+			
+			<!-- #register -->
+			<Word>Type</Word>
+			<Word>SizelessType</Word>
+			<Word>DocAlias</Word>
+			<Word>Prefix</Word>
+		</Keywords>
+		
+		<Span color="string.double" rule="String" stopateol = "true" escape='\'>
+			<Begin>"</Begin>
+			<End>"</End>
+		</Span>
+	</Rule>
+	
+	<!-- End Describing (the valid arguments and their formats) -->
+	
+	<Keywords color="text.preprocessor.keyword">
+		<Word>cpu</Word>
+	</Keywords>
+	<Keywords color="text.preprocessor">
+		<Word>x86</Word>
+	</Keywords>
+	
+	<Keywords color="string" ignorecase="true">
+		<Word>override</Word>
+		<Word>docalias</Word>
+	</Keywords>
+	
+	<Keywords color="string" ignorecase="true">
+		<Word>!=</Word>
+		<Word>==</Word>
+		<Word>&lt;</Word>
+		<Word>&gt;</Word>
+		<Word>&lt;=</Word>
+		<Word>&gt;=</Word>
+		<Word>+</Word>
+		<Word>-</Word>
+		<Word>=</Word>
+	</Keywords>
+	
+	<Keywords color="keyword" ignorecase="true">
+		<Word>imm8</Word>
+		<Word>imm16</Word>
+		<Word>imm32</Word>
+		
+		<!-- Register Forms -->
+		<Word>r8</Word>
+		<Word>r16</Word>
+		<Word>r32</Word>
+		
+		<!-- Segment Register -->
+		<Word>sreg</Word>
+		<!-- Control Register -->
+		<Word>creg</Word>
+		<!-- Debug Register -->
+		<Word>dreg</Word>
+		<!-- XMM Register -->
+		<Word>xreg</Word>
+		<!-- YMM Register -->
+		<Word>yreg</Word>
+		<Word>sti</Word>
+		
+		
+		<Word>r&#47;m8</Word>
+		<Word>rm8</Word>
+		<Word>r&#47;m16</Word>
+		<Word>rm16</Word>
+		<Word>r&#47;m32</Word>
+		<Word>rm32</Word>
+		
+		<Word>dis8</Word>
+		<Word>dis16</Word>
+		<Word>dis32</Word>
+		
+		<Word>mem8</Word>
+		<Word>mem16</Word>
+		<Word>mem32</Word>
+		<Word>mem64</Word>
+		<Word>mem128</Word>
+		<Word>mem256</Word>
+		
+		<Word>memf32</Word>
+		<Word>memf64</Word>
+		<Word>memf80</Word>
+		<Word>memf128</Word>
+		
+		<Word>arg1</Word>
+		<Word>arg2</Word>
+		<Word>arg3</Word>
+		<Word>arg4</Word>
+		<Word>arg5</Word>
+		<Word>arg6</Word>
+		<Word>arg7</Word>
+		<Word>arg8</Word>
+		
+		<Word>MRSB</Word>
+		<Word>OpSz</Word>
+		<Word>AdSz</Word>
+		<Word>Evil</Word>
+		
+		<Word>exact</Word>
+		<Word>emitonly</Word>
+		<Word>fits</Word>
+		<Word>comp</Word>
+	</Keywords>
+	
+	<Keywords color="keyword.semantic.type" ignorecase="true">
+		<!-- Segments -->
+		<Word>CS</Word>
+		<Word>DS</Word>
+		<Word>ES</Word>
+		<Word>FS</Word>
+		<Word>GS</Word>
+		<Word>SS</Word>
+		<Word>NONE</Word>
+		
+		<!-- Registers (Only used for optimized forms of instructions) -->
+		<Word>AL</Word>
+		<Word>AX</Word>
+		<Word>EAX</Word>
+		
+	</Keywords>
+	
+	<Match color="text.markup">CSharpNumber</Match>
+	<Match color="text.markup">0b[01]+</Match>
+	
+	<Rule name="Comment">
+		
+	</Rule>
+	
+	<Rule name="XmlDocumentation">
+		<Span color="comment.tag.doc" rule="XmlDocumentationTag" stopateol="true" >
+			<Begin>&lt;</Begin>
+			<End>&gt;</End>
+		</Span>
+	</Rule>
+
+	<Rule name="XmlDocumentationTag" color="comment.tag.doc"> 
+		<Span color="string" stopateol = "true" escape="\" rule="String" >
+			<Begin>"</Begin>
+			<End>"</End>
+		</Span>
+		<Keywords color="comment.keyword">
+			<Word>c</Word>
+			<Word>code</Word>
+			<Word>example</Word>
+			<Word>exception</Word>
+			<Word>list</Word>
+			<Word>para</Word>
+			<Word>param</Word>
+			<Word>paramref</Word>
+			<Word>permission</Word>
+			<Word>remarks</Word>
+			<Word>returns</Word>
+			<Word>see</Word>
+			<Word>seealso</Word>
+			<Word>summary</Word>
+			<Word>value</Word>
+			<Word>type</Word>
+			<Word>name</Word>
+			<Word>cref</Word>
+			<Word>item</Word>
+			<Word>term</Word>
+			<Word>description</Word>
+			<Word>listheader</Word>
+		</Keywords>
+	</Rule>
+	
+</SyntaxMode>

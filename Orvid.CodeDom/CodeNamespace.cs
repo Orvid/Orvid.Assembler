@@ -34,15 +34,11 @@ namespace Orvid.CodeDom
 	[Serializable]
 	[ClassInterface(ClassInterfaceType.AutoDispatch)]
 	[ComVisible(true)]
-	public class CodeNamespace
-		: CodeObject
+	public class CodeNamespace : CodeObject
 	{
-		private CodeCommentStatementCollection comments;
 		private CodeNamespaceImportCollection imports;
-		//private CodeNamespaceCollection namespaces;
 		private CodeTypeDeclarationCollection classes;
 		private string name;
-		//int populated;
 
 		//
 		// Constructors
@@ -59,20 +55,6 @@ namespace Orvid.CodeDom
 		//
 		// Properties
 		//
-		public CodeCommentStatementCollection Comments
-		{
-			get
-			{
-				if (comments == null)
-				{
-					comments = new CodeCommentStatementCollection();
-					if (PopulateComments != null)
-						PopulateComments(this, EventArgs.Empty);
-				}
-				return comments;
-			}
-		}
-
 		public CodeNamespaceImportCollection Imports
 		{
 			get
@@ -80,8 +62,6 @@ namespace Orvid.CodeDom
 				if (imports == null)
 				{
 					imports = new CodeNamespaceImportCollection();
-					if (PopulateImports != null)
-						PopulateImports(this, EventArgs.Empty);
 				}
 				return imports;
 			}
@@ -110,18 +90,9 @@ namespace Orvid.CodeDom
 				if (classes == null)
 				{
 					classes = new CodeTypeDeclarationCollection();
-					if (PopulateTypes != null)
-						PopulateTypes(this, EventArgs.Empty);
 				}
 				return classes;
 			}
 		}
-
-		//
-		// Events
-		//
-		public event EventHandler PopulateComments;
-		public event EventHandler PopulateImports;
-		public event EventHandler PopulateTypes;
 	}
 }

@@ -45,13 +45,7 @@ namespace Orvid.CodeDom
 
 		void Visit(CodeDefaultValueExpression o);
 
-		void Visit(CodeDelegateCreateExpression o);
-
-		void Visit(CodeDelegateInvokeExpression o);
-
 		void Visit(CodeDirectionExpression o);
-
-		void Visit(CodeEventReferenceExpression o);
 
 		void Visit(CodeFieldReferenceExpression o);
 
@@ -71,8 +65,6 @@ namespace Orvid.CodeDom
 
 		void Visit(CodePropertySetValueReferenceExpression o);
 
-		void Visit(CodeSnippetExpression o);
-
 		void Visit(CodeThisReferenceExpression o);
 
 		void Visit(CodeTypeOfExpression o);
@@ -83,10 +75,6 @@ namespace Orvid.CodeDom
 
 		// CodeStatement
 		void Visit(CodeAssignStatement o);
-
-		void Visit(CodeAttachEventStatement o);
-
-		void Visit(CodeCommentStatement o);
 
 		void Visit(CodeConditionStatement o);
 
@@ -100,8 +88,6 @@ namespace Orvid.CodeDom
 
 		void Visit(CodeMethodReturnStatement o);
 
-		void Visit(CodeRemoveEventStatement o);
-
 		void Visit(CodeThrowExceptionStatement o);
 
 		void Visit(CodeTryCatchFinallyStatement o);
@@ -113,15 +99,11 @@ namespace Orvid.CodeDom
 
 		void Visit(CodeEntryPointMethod o);
 
-		void Visit(CodeMemberEvent o);
-
 		void Visit(CodeMemberField o);
 
 		void Visit(CodeMemberMethod o);
 
 		void Visit(CodeMemberProperty o);
-
-		void Visit(CodeSnippetTypeMember o);
 
 		void Visit(CodeTypeConstructor o);
 
@@ -131,9 +113,6 @@ namespace Orvid.CodeDom
 		void Visit(CodeDefaultCaseStatement o);
 		void Visit(CodeBreakStatement o);
 		void Visit(CodeScopeStatement o);
-		void Visit(CodeDocumentationSummaryNode o);
-		void Visit(CodeDocumentationParameterNode o);
-		void Visit(CodeDocumentationReturnNode o);
 		#endregion
 	}
 }

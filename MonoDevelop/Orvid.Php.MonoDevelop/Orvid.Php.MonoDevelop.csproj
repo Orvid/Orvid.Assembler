@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{92D252C4-D777-48B9-9068-C3E603EDD5C4}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Orvid.Php.MonoDevelop</RootNamespace>
+    <AssemblyName>Orvid.Php.MonoDevelop</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="cp Orvid.Php.MonoDevelop.dll &quot;/Users/${User}/Library/Application Support/MonoDevelop-3.0/LocalInstall/Addins/Orvid.Php.MonoDevelop/&quot;" workingdir="${TargetDir}" />
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="cp Orvid.Php.MonoDevelop.dll &quot;/Users/${User}/Library/Application Support/MonoDevelop-3.0/LocalInstall/Addins/Orvid.Php.MonoDevelop/&quot;" workingdir="${TargetDir}" />
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Mono.TextEditor, Version=1.0.0.0, Culture=neutral">
+      <Private>False</Private>
+      <Package>/Users/dyke5094/Desktop/MonoDevelop.app/Contents/MacOS/lib/monodevelop/bin/Mono.TextEditor.dll</Package>
+    </Reference>
+    <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoDevelop.Core, Version=2.6.0.0, Culture=neutral">
+      <Private>False</Private>
+      <Package>/Users/dyke5094/Desktop/MonoDevelop.app/Contents/MacOS/lib/monodevelop/bin/MonoDevelop.Core.dll</Package>
+    </Reference>
+    <Reference Include="MonoDevelop.Ide, Version=2.6.0.0, Culture=neutral">
+      <Private>False</Private>
+      <Package>/Users/dyke5094/Desktop/MonoDevelop.app/Contents/MacOS/lib/monodevelop/bin/MonoDevelop.Ide.dll</Package>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <EmbeddedResource Include="Orvid.Php.MonoDevelop.addin.xml">
+      <LogicalName>Orvid.Assembler.Cpud.MonoDevelop.addin.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhpSyntaxMode.xml">
+      <LogicalName>PhpSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PhpTextEditorIndentation.cs" />
+  </ItemGroup>
+</Project>

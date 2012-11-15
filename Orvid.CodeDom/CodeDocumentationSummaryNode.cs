@@ -18,11 +18,6 @@ namespace Orvid.CodeDom
 		{
 			this.mLines.AddRange(linesOfDocumentation);
 		}
-
-		internal override void Accept(ICodeDomVisitor visitor)
-		{
-			visitor.Visit(this);
-		}
 	}
 }
 

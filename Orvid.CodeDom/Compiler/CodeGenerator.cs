@@ -32,7 +32,6 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using System;
 using System.Globalization;
-using System.CodeDom;
 using System.Reflection;
 using System.IO;
 using System.Collections;
@@ -190,10 +189,6 @@ namespace Orvid.CodeDom.Compiler
 		protected abstract void GenerateDefaultCaseStatement(CodeDefaultCaseStatement e);
 		protected abstract void GenerateBreakStatement(CodeBreakStatement e);
 
-		protected abstract void GenerateDocumentationSummaryNode(CodeDocumentationSummaryNode n);
-		protected abstract void GenerateDocumentationParameterNode(CodeDocumentationParameterNode n);
-		protected abstract void GenerateDocumentationReturnNode(CodeDocumentationReturnNode n);
-
 		protected virtual void GenerateScopeStatement(CodeScopeStatement e)
 		{
 			foreach (CodeStatement st in e.Statements)
@@ -213,12 +208,6 @@ namespace Orvid.CodeDom.Compiler
 		protected abstract void GenerateArrayIndexerExpression(CodeArrayIndexerExpression e);
 
 		protected abstract void GenerateAssignStatement(CodeAssignStatement s);
-
-		protected abstract void GenerateAttachEventStatement(CodeAttachEventStatement s);
-
-		protected abstract void GenerateAttributeDeclarationsStart(CodeAttributeDeclarationCollection attributes);
-
-		protected abstract void GenerateAttributeDeclarationsEnd(CodeAttributeDeclarationCollection attributes);
 
 		protected abstract void GenerateBaseReferenceExpression(CodeBaseReferenceExpression e);
 
@@ -255,60 +244,37 @@ namespace Orvid.CodeDom.Compiler
 			throw new NotImplementedException();
 		}
 
-		protected abstract void GenerateComment(CodeComment comment);
-
-		protected virtual void GenerateCommentStatement(CodeCommentStatement statement)
-		{
-			GenerateComment(statement.Comment);
-		}
-
-		protected virtual void GenerateCommentStatements(CodeCommentStatementCollection statements)
-		{
-			foreach (CodeCommentStatement comment in statements)
-				GenerateCommentStatement(comment);
-		}
-
 		protected virtual void GenerateCompileUnit(CodeCompileUnit compileUnit)
 		{
 			GenerateCompileUnitStart(compileUnit);
 
+			// Globals come first.
 			foreach (CodeNamespace ns in compileUnit.Namespaces)
-				if (string.IsNullOrEmpty(ns.Name))
-					GenerateNamespace(ns);
-				      
-			CodeAttributeDeclarationCollection attributes = compileUnit.AssemblyCustomAttributes;
-			if (attributes.Count != 0)
 			{
-				foreach (CodeAttributeDeclaration att in attributes)
+				if (string.IsNullOrEmpty(ns.Name))
 				{
-					GenerateAttributeDeclarationsStart(attributes);
-					output.Write("assembly: ");
-					OutputAttributeDeclaration(att);
-					GenerateAttributeDeclarationsEnd(attributes);
+					GenerateNamespace(ns);
 				}
-				output.WriteLine();
 			}
 
+			// Then the namespaces with actual names
 			foreach (CodeNamespace ns in compileUnit.Namespaces)
+			{
 				if (!string.IsNullOrEmpty(ns.Name))
+				{
 					GenerateNamespace(ns);
+				}
+			}
 
 			GenerateCompileUnitEnd(compileUnit);
 		}
 
 		protected virtual void GenerateCompileUnitEnd(CodeCompileUnit compileUnit)
 		{
-			if (compileUnit.EndDirectives.Count > 0)
-				GenerateDirectives(compileUnit.EndDirectives);
 		}
 
 		protected virtual void GenerateCompileUnitStart(CodeCompileUnit compileUnit)
 		{
-			if (compileUnit.StartDirectives.Count > 0)
-			{
-				GenerateDirectives(compileUnit.StartDirectives);
-				Output.WriteLine();
-			}
 		}
 
 		protected abstract void GenerateConditionStatement(CodeConditionStatement s);
@@ -320,14 +286,7 @@ namespace Orvid.CodeDom.Compiler
 			Output.Write(d.ToString(CultureInfo.InvariantCulture));
 		}
 
-		protected virtual void GenerateDefaultValueExpression(CodeDefaultValueExpression e)
-		{
-			throw new NotImplementedException();
-		}
-
-		protected abstract void GenerateDelegateCreateExpression(CodeDelegateCreateExpression e);
-
-		protected abstract void GenerateDelegateInvokeExpression(CodeDelegateInvokeExpression e);
+		protected abstract void GenerateDefaultValueExpression(CodeDefaultValueExpression e);
 
 		protected virtual void GenerateDirectionExpression(CodeDirectionExpression e)
 		{
@@ -342,10 +301,6 @@ namespace Orvid.CodeDom.Compiler
 		}
 
 		protected abstract void GenerateEntryPointMethod(CodeEntryPointMethod m, CodeTypeDeclaration d);
-
-		protected abstract void GenerateEvent(CodeMemberEvent ev, CodeTypeDeclaration d);
-
-		protected abstract void GenerateEventReferenceExpression(CodeEventReferenceExpression e);
 
 		protected void GenerateExpression(CodeExpression e)
 		{
@@ -376,10 +331,6 @@ namespace Orvid.CodeDom.Compiler
 
 		protected abstract void GenerateLabeledStatement(CodeLabeledStatement statement);
 
-		protected abstract void GenerateLinePragmaStart(CodeLinePragma p);
-
-		protected abstract void GenerateLinePragmaEnd(CodeLinePragma p);
-
 		protected abstract void GenerateMethod(CodeMemberMethod m, CodeTypeDeclaration d);
 
 		protected abstract void GenerateMethodInvokeExpression(CodeMethodInvokeExpression e);
@@ -390,20 +341,11 @@ namespace Orvid.CodeDom.Compiler
 
 		protected virtual void GenerateNamespace(CodeNamespace ns)
 		{
-			foreach (CodeCommentStatement statement in ns.Comments)
-				GenerateCommentStatement(statement);
-
 			GenerateNamespaceStart(ns);
 
 			foreach (CodeNamespaceImport import in ns.Imports)
 			{
-				if (import.LinePragma != null)
-					GenerateLinePragmaStart(import.LinePragma);
-
 				GenerateNamespaceImport(import);
-
-				if (import.LinePragma != null)
-					GenerateLinePragmaEnd(import.LinePragma);
 			}
 
 			output.WriteLine();
@@ -423,13 +365,7 @@ namespace Orvid.CodeDom.Compiler
 		{
 			foreach (CodeNamespaceImport import in e.Imports)
 			{
-				if (import.LinePragma != null)
-					GenerateLinePragmaStart(import.LinePragma);
-
 				GenerateNamespaceImport(import);
-
-				if (import.LinePragma != null)
-					GenerateLinePragmaEnd(import.LinePragma);
 			}
 		}
 
@@ -443,8 +379,6 @@ namespace Orvid.CodeDom.Compiler
 
 		protected virtual void GenerateParameterDeclarationExpression(CodeParameterDeclarationExpression e)
 		{
-			if (e.CustomAttributes != null && e.CustomAttributes.Count > 0)
-				OutputAttributeDeclarations(e.CustomAttributes);
 			OutputDirection(e.Direction);
 			OutputType(e.Type);
 			output.Write(' ');
@@ -471,7 +405,7 @@ namespace Orvid.CodeDom.Compiler
 					output.Write("'" + value.ToString() + "'");
 					break;
 				case TypeCode.String:
-					output.Write(QuoteSnippetString((string)value));
+					output.Write(EscapeString((string)value));
 					break;
 				case TypeCode.Single:
 					GenerateSingleFloatValue((float)value);
@@ -502,72 +436,21 @@ namespace Orvid.CodeDom.Compiler
 
 		protected abstract void GeneratePropertySetValueReferenceExpression(CodePropertySetValueReferenceExpression e);
 
-		protected abstract void GenerateRemoveEventStatement(CodeRemoveEventStatement statement);
-
 		protected virtual void GenerateSingleFloatValue(Single s)
 		{
 			output.Write(s.ToString(CultureInfo.InvariantCulture));
 		}
 
-		protected virtual void GenerateSnippetCompileUnit(CodeSnippetCompileUnit e)
-		{
-			if (e.LinePragma != null)
-				GenerateLinePragmaStart(e.LinePragma);
-
-			output.WriteLine(e.Value);
-
-			if (e.LinePragma != null)
-				GenerateLinePragmaEnd(e.LinePragma);
-
-		}
-
-		protected abstract void GenerateSnippetExpression(CodeSnippetExpression e);
-
-		protected abstract void GenerateSnippetMember(CodeSnippetTypeMember m);
-
-		protected virtual void GenerateSnippetStatement(CodeSnippetStatement s)
-		{
-			output.WriteLine(s.Value);
-		}
-
 		protected void GenerateStatement(CodeStatement s)
 		{
-			if (s.StartDirectives.Count > 0)
-				GenerateDirectives(s.StartDirectives);
-			if (s.LinePragma != null)
-				GenerateLinePragmaStart(s.LinePragma);
-
-			CodeSnippetStatement snippet = s as CodeSnippetStatement;
-			if (snippet != null)
+			try
 			{
-				int indent = Indent;
-				try
-				{
-					Indent = 0;
-					GenerateSnippetStatement(snippet);
-				}
-				finally
-				{
-					Indent = indent;
-				}
+				s.Accept(visitor);
 			}
-			else
+			catch (NotImplementedException)
 			{
-				try
-				{
-					s.Accept(visitor);
-				}
-				catch (NotImplementedException)
-				{
-					throw new ArgumentException("Element type " + s.GetType() + " is not supported.", "s");
-				}
+				throw new ArgumentException("Element type " + s.GetType() + " is not supported.", "s");
 			}
-
-			if (s.LinePragma != null)
-				GenerateLinePragmaEnd(s.LinePragma);
-
-			if (s.EndDirectives.Count > 0)
-				GenerateDirectives(s.EndDirectives);
 		}
 
 		protected void GenerateStatements(CodeStatementCollection c)
@@ -622,66 +505,11 @@ namespace Orvid.CodeDom.Compiler
 		/*
 		 * Output Methods
 		 */
-		protected virtual void OutputAttributeArgument(CodeAttributeArgument argument)
-		{
-			string name = argument.Name;
-			if ((name != null) && (name.Length > 0))
-			{
-				output.Write(name);
-				output.Write('=');
-			}
-			GenerateExpression(argument.Value);
-		}
-
-		private void OutputAttributeDeclaration(CodeAttributeDeclaration attribute)
-		{
-			output.Write(attribute.Name.Replace('+', '.'));
-			output.Write('(');
-			IEnumerator enumerator = attribute.Arguments.GetEnumerator();
-			if (enumerator.MoveNext())
-			{
-				CodeAttributeArgument argument = (CodeAttributeArgument)enumerator.Current;
-				OutputAttributeArgument(argument);
-				
-				while (enumerator.MoveNext())
-				{
-					output.Write(',');
-					argument = (CodeAttributeArgument)enumerator.Current;
-					OutputAttributeArgument(argument);
-				}
-			}
-			output.Write(')');
-		}
-
-		protected virtual void OutputAttributeDeclarations(CodeAttributeDeclarationCollection attributes)
-		{
-			GenerateAttributeDeclarationsStart(attributes);
-			
-			IEnumerator enumerator = attributes.GetEnumerator();
-			if (enumerator.MoveNext())
-			{
-				CodeAttributeDeclaration attribute = (CodeAttributeDeclaration)enumerator.Current;
-
-				OutputAttributeDeclaration(attribute);
-				
-				while (enumerator.MoveNext())
-				{
-					attribute = (CodeAttributeDeclaration)enumerator.Current;
-
-					output.WriteLine(',');
-					OutputAttributeDeclaration(attribute);
-				}
-			}
-
-			GenerateAttributeDeclarationsEnd(attributes);
-		}
-
 		protected virtual void OutputDirection(FieldDirection direction)
 		{
 			switch (direction)
 			{
 				case FieldDirection.In:
-				//output.Write ("in ");
 					break;
 				case FieldDirection.Out:
 					output.Write("out ");
@@ -788,7 +616,7 @@ namespace Orvid.CodeDom.Compiler
 					output.Write("abstract ");
 					break;
 				case MemberAttributes.Final:
-					// Do nothing
+					output.Write("readonly ");
 					break;
 				case MemberAttributes.Static:
 					output.Write("static ");
@@ -797,30 +625,25 @@ namespace Orvid.CodeDom.Compiler
 					output.Write("override ");
 					break;
 				default:
-					//
-					// FUNNY! if the scope value is
-					// rubbish (0 or >Const), and access
-					// is public or protected, make it
-					// "virtual".
-					//
-					// i'm not sure whether this is 100%
-					// correct, but it seems to be MS
-					// behavior.
-					//
-					// On .NET 2.0, internal members
-					// are also marked "virtual".
-					//
-					MemberAttributes access = attributes & MemberAttributes.AccessMask;
-					if (access == MemberAttributes.Public || access == MemberAttributes.Family)
-						output.Write("virtual ");
 					break;
 			}
+			if ((attributes & MemberAttributes.Virtual) == MemberAttributes.Virtual)
+				output.Write("virtual ");
 		}
 
 		protected virtual void OutputOperator(CodeBinaryOperatorType op)
 		{
 			switch (op)
 			{
+				case CodeBinaryOperatorType.ShiftLeft:
+					output.Write("<<");
+					break;
+				case CodeBinaryOperatorType.ShiftRight:
+					output.Write(">>");
+					break;
+				case CodeBinaryOperatorType.SignExtendedShiftRight:
+					output.Write(">>>");
+					break;
 				case CodeBinaryOperatorType.StringConcat:
 				case CodeBinaryOperatorType.Add:
 					output.Write("+");
@@ -896,14 +719,12 @@ namespace Orvid.CodeDom.Compiler
 
 		protected abstract void OutputType(CodeTypeReference t);
 
-		protected virtual void OutputTypeAttributes(TypeAttributes attributes,
-							     bool isStruct,
-							     bool isEnum)
+		protected virtual void OutputTypeAttributes(TypeAttributes attributes, bool isStruct, bool isEnum)
 		{
 			switch (attributes & TypeAttributes.VisibilityMask)
 			{
 				case TypeAttributes.NotPublic:
-				// private by default
+					output.Write("private ");
 					break; 
 
 				case TypeAttributes.Public:
@@ -938,15 +759,14 @@ namespace Orvid.CodeDom.Compiler
 			}
 		}
 
-		protected virtual void OutputTypeNamePair(CodeTypeReference type,
-							   string name)
+		protected virtual void OutputTypeNamePair(CodeTypeReference type, string name)
 		{
 			OutputType(type);
 			output.Write(' ');
 			output.Write(name);
 		}
 
-		protected abstract string QuoteSnippetString(string value);
+		protected abstract string EscapeString(string value);
 
 		/*
 		 * ICodeGenerator
@@ -974,83 +794,56 @@ namespace Orvid.CodeDom.Compiler
 			this.options = options;
 		}
 
-		void ICodeGenerator.GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit,
-								 TextWriter output,
-								 CodeGeneratorOptions options)
+		void ICodeGenerator.GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit, TextWriter output, CodeGeneratorOptions options)
 		{
 			InitOutput(output, options);
-
-			if (compileUnit is CodeSnippetCompileUnit)
-			{
-				GenerateSnippetCompileUnit((CodeSnippetCompileUnit)compileUnit);
-			}
-			else
-			{
-				GenerateCompileUnit(compileUnit);
-			}
+			GenerateCompileUnit(compileUnit);
 		}
 
-		void ICodeGenerator.GenerateCodeFromExpression(CodeExpression expression,
-								TextWriter output,
-								CodeGeneratorOptions options)
+		void ICodeGenerator.GenerateCodeFromExpression(CodeExpression expression, TextWriter output, CodeGeneratorOptions options)
 		{
 			InitOutput(output, options);
 			GenerateExpression(expression);
 		}
 
-		void ICodeGenerator.GenerateCodeFromNamespace(CodeNamespace ns,
-							       TextWriter output, 
-							       CodeGeneratorOptions options)
+		void ICodeGenerator.GenerateCodeFromNamespace(CodeNamespace ns, TextWriter output, CodeGeneratorOptions options)
 		{
 			InitOutput(output, options);
 			GenerateNamespace(ns);
 		}
 
-		void ICodeGenerator.GenerateCodeFromStatement(CodeStatement statement,
-							       TextWriter output, 
-							       CodeGeneratorOptions options)
+		void ICodeGenerator.GenerateCodeFromStatement(CodeStatement statement, TextWriter output, CodeGeneratorOptions options)
 		{
 			InitOutput(output, options);
 			GenerateStatement(statement);
 		}
 
-		void ICodeGenerator.GenerateCodeFromType(CodeTypeDeclaration type,
-							  TextWriter output,
-							  CodeGeneratorOptions options)
+		void ICodeGenerator.GenerateCodeFromType(CodeTypeDeclaration type, TextWriter output, CodeGeneratorOptions options)
 		{
 			InitOutput(output, options);
 			GenerateType(type);
 		}
+
+		protected abstract void OutputDocumentation(CodeDocumentationNodeCollection docs);
 
 		private void GenerateType(CodeTypeDeclaration type)
 		{
 			this.currentType = type;
 			this.currentMember = null;
 
-			if (type.StartDirectives.Count > 0)
-				GenerateDirectives(type.StartDirectives);
-			foreach (CodeCommentStatement statement in type.Comments)
-				GenerateCommentStatement(statement);
 			// EXTENDED
-			foreach (CodeDocumentationNode docNode in type.Documentation)
-				docNode.Accept(visitor);
-
-			if (type.LinePragma != null)
-				GenerateLinePragmaStart(type.LinePragma);
+			OutputDocumentation(type.Documentation);
 
 			GenerateTypeStart(type);
 
 			CodeTypeMember[] members = new CodeTypeMember[type.Members.Count];
 			type.Members.CopyTo(members, 0);
 
-			if (!Options.VerbatimOrder)
-			{
-				int[] order = new int[members.Length];
-				for (int n = 0; n < members.Length; n++)
-					order[n] = Array.IndexOf(memberTypes, members[n].GetType()) * members.Length + n;
+			int[] order = new int[members.Length];
+			for (int n = 0; n < members.Length; n++)
+				order[n] = Array.IndexOf(memberTypes, members[n].GetType()) * members.Length + n;
 
-				Array.Sort(order, members);
-			}
+			Array.Sort(order, members);
 
 			// WARNING: if anything is missing in the foreach loop and you add it, add the type in
 			// its corresponding place in CodeTypeMemberComparer class (below)
@@ -1064,14 +857,6 @@ namespace Orvid.CodeDom.Compiler
 				CodeTypeMember prevMember = this.currentMember;
 				this.currentMember = member;
 
-				if (prevMember != null && subtype == null)
-				{
-					if (prevMember.LinePragma != null)
-						GenerateLinePragmaEnd(prevMember.LinePragma);
-					if (prevMember.EndDirectives.Count > 0)
-						GenerateDirectives(prevMember.EndDirectives);
-				}
-
 				if (!first && options.BlankLinesBetweenMembers && !(prevMember is CodeMemberField && currentMember is CodeMemberField))
 					output.WriteLine();
 
@@ -1083,16 +868,8 @@ namespace Orvid.CodeDom.Compiler
 					continue;
 				}
 
-				if (currentMember.StartDirectives.Count > 0)
-					GenerateDirectives(currentMember.StartDirectives);
-				foreach (CodeCommentStatement statement in member.Comments)
-					GenerateCommentStatement(statement);
 				// EXTENDED
-				foreach (CodeDocumentationNode docNode in member.Documentation)
-					docNode.Accept(visitor);
-
-				if (member.LinePragma != null)
-					GenerateLinePragmaStart(member.LinePragma);
+				OutputDocumentation(member.Documentation);
 
 				try
 				{
@@ -1105,23 +882,8 @@ namespace Orvid.CodeDom.Compiler
 				first = false;
 			}
 
-			// Hack because of previous continue usage
-			if (currentMember != null && !(currentMember is CodeTypeDeclaration))
-			{
-				if (currentMember.LinePragma != null)
-					GenerateLinePragmaEnd(currentMember.LinePragma);
-				if (currentMember.EndDirectives.Count > 0)
-					GenerateDirectives(currentMember.EndDirectives);
-			}
-
 			this.currentType = type;
 			GenerateTypeEnd(type);
-
-			if (type.LinePragma != null)
-				GenerateLinePragmaEnd(type.LinePragma);
-
-			if (type.EndDirectives.Count > 0)
-				GenerateDirectives(type.EndDirectives);
 		}
 
 		protected abstract string GetTypeOutput(CodeTypeReference type);
@@ -1209,19 +971,13 @@ namespace Orvid.CodeDom.Compiler
 		// The position in the array determines the order in which those
 		// kind of CodeTypeMembers are generated. Less is more ;-)
 		static Type[] memberTypes = {	typeof(CodeMemberField),
-						typeof(CodeSnippetTypeMember),
 						typeof(CodeTypeConstructor),
 						typeof(CodeConstructor),
 						typeof(CodeMemberProperty),
-						typeof(CodeMemberEvent),
 						typeof(CodeMemberMethod),
 						typeof(CodeTypeDeclaration),
 						typeof(CodeEntryPointMethod)
 					};
-
-		protected virtual void GenerateDirectives(CodeDirectiveCollection directives)
-		{
-		}
 
 		internal class Visitor : ICodeDomVisitor
 		{
@@ -1269,24 +1025,9 @@ namespace Orvid.CodeDom.Compiler
 				g.GenerateDefaultValueExpression(o);
 			}
 	
-			public void Visit(CodeDelegateCreateExpression o)
-			{
-				g.GenerateDelegateCreateExpression(o);
-			}
-	
-			public void Visit(CodeDelegateInvokeExpression o)
-			{
-				g.GenerateDelegateInvokeExpression(o);
-			}
-	
 			public void Visit(CodeDirectionExpression o)
 			{
 				g.GenerateDirectionExpression(o);
-			}
-	
-			public void Visit(CodeEventReferenceExpression o)
-			{
-				g.GenerateEventReferenceExpression(o);
 			}
 	
 			public void Visit(CodeFieldReferenceExpression o)
@@ -1334,11 +1075,6 @@ namespace Orvid.CodeDom.Compiler
 				g.GeneratePropertySetValueReferenceExpression(o);
 			}
 	
-			public void Visit(CodeSnippetExpression o)
-			{
-				g.GenerateSnippetExpression(o);
-			}
-	
 			public void Visit(CodeThisReferenceExpression o)
 			{
 				g.GenerateThisReferenceExpression(o);
@@ -1364,16 +1100,6 @@ namespace Orvid.CodeDom.Compiler
 			public void Visit(CodeAssignStatement o)
 			{
 				g.GenerateAssignStatement(o);
-			}
-
-			public void Visit(CodeAttachEventStatement o)
-			{
-				g.GenerateAttachEventStatement(o);
-			}
-
-			public void Visit(CodeCommentStatement o)
-			{
-				g.GenerateCommentStatement(o);
 			}
 
 			public void Visit(CodeConditionStatement o)
@@ -1406,11 +1132,6 @@ namespace Orvid.CodeDom.Compiler
 				g.GenerateMethodReturnStatement(o);
 			}
 
-			public void Visit(CodeRemoveEventStatement o)
-			{
-				g.GenerateRemoveEventStatement(o);
-			}
-
 			public void Visit(CodeThrowExceptionStatement o)
 			{
 				g.GenerateThrowExceptionStatement(o);
@@ -1438,11 +1159,6 @@ namespace Orvid.CodeDom.Compiler
 				g.GenerateEntryPointMethod(o, g.CurrentClass);
 			}
 	
-			public void Visit(CodeMemberEvent o)
-			{
-				g.GenerateEvent(o, g.CurrentClass);
-			}
-	
 			public void Visit(CodeMemberField o)
 			{
 				g.GenerateField(o);
@@ -1456,11 +1172,6 @@ namespace Orvid.CodeDom.Compiler
 			public void Visit(CodeMemberProperty o)
 			{
 				g.GenerateProperty(o, g.CurrentClass);		
-			}
-	
-			public void Visit(CodeSnippetTypeMember o)
-			{
-				g.GenerateSnippetMember(o);
 			}
 	
 			public void Visit(CodeTypeConstructor o)
@@ -1493,21 +1204,6 @@ namespace Orvid.CodeDom.Compiler
 			public void Visit(CodeScopeStatement o)
 			{
 				g.GenerateScopeStatement(o);
-			}
-			
-			public void Visit(CodeDocumentationSummaryNode o)
-			{
-				g.GenerateDocumentationSummaryNode(o);
-			}
-			
-			public void Visit(CodeDocumentationParameterNode o)
-			{
-				g.GenerateDocumentationParameterNode(o);
-			}
-			
-			public void Visit(CodeDocumentationReturnNode o)
-			{
-				g.GenerateDocumentationReturnNode(o);
 			}
 
 		}

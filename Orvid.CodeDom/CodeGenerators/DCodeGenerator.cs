@@ -12,7 +12,62 @@ namespace Orvid.CodeDom.CodeGenerators
 {
 	public class DCodeGenerator : CSharpCodeGenerator
 	{
-#warning Need to deal with documentation at some point.
+		protected override void OutputDocumentation(CodeDocumentationNodeCollection docs)
+		{
+			if (docs.Count > 0)
+			{
+				var output = base.Output;
+
+				output.WriteLine("/** ");
+
+				bool firstParam = true;
+				bool prevWasSummary = false;
+				// Probably need to have this sorted at some point.
+				foreach (CodeDocumentationNode node in docs)
+				{
+					if (prevWasSummary)
+					{
+						output.WriteLine(" * ");
+						prevWasSummary = false;
+					}
+
+					if (node is CodeDocumentationSummaryNode)
+					{
+						var n = (CodeDocumentationSummaryNode)node;
+						foreach (string s in n.Lines)
+						{
+							output.Write(" * ");
+							output.WriteLine(s);
+						}
+						prevWasSummary = true;
+					}
+					else if (node is CodeDocumentationParameterNode)
+					{
+						var n = (CodeDocumentationParameterNode)node;
+						if (firstParam)
+						{
+							output.WriteLine(" * Params:");
+							firstParam = false;
+						}
+						output.Write(" *     ");
+						output.Write(n.ParamName);
+						output.Write(" = ");
+						output.WriteLine(n.Summary);
+					}
+					else if (node is CodeDocumentationReturnNode)
+					{
+						output.Write(" * Returns: ");
+						output.WriteLine(((CodeDocumentationReturnNode)node).Summary);
+					}
+					else
+					{
+						throw new Exception("Unknown documentation node type!");
+					}
+				}
+
+				output.WriteLine(" */");
+			}
+		}
 
 		protected override void GenerateCastExpression(CodeCastExpression expression)
 		{
@@ -36,13 +91,19 @@ namespace Orvid.CodeDom.CodeGenerators
 			base.Output.Write("super");
 		}
 
+		protected override void OutputMemberScopeModifier(MemberAttributes attributes)
+		{
+			if ((attributes & MemberAttributes.Sealed) == MemberAttributes.Sealed)
+				base.Output.Write("final ");
+			base.OutputMemberScopeModifier(attributes);
+		}
+
 		protected override void GenerateConstructor(CodeConstructor constructor, CodeTypeDeclaration declaration)
 		{	
 			if (base.IsCurrentDelegate || base.IsCurrentEnum || base.IsCurrentInterface)
 			{
 				return;
 			}
-			base.OutputAttributes(constructor.CustomAttributes, null, false);
 			this.OutputMemberAccessModifier(constructor.Attributes);
 			base.Output.Write("this(");
 			this.OutputParameters(constructor.Parameters);
@@ -107,6 +168,22 @@ namespace Orvid.CodeDom.CodeGenerators
 			}
 		}
 
+		protected override string GetSafeName(string id)
+		{
+			if (id == "ToString")
+				return "toString";
+			return base.GetSafeName(id);
+		}
+
+		protected override void OutputFieldScopeModifier(MemberAttributes attributes)
+		{
+			// D Doesn't have a "readonly" modifier.
+			if ((attributes & MemberAttributes.ScopeMask) != MemberAttributes.Final)
+			{
+				base.OutputFieldScopeModifier(attributes);
+			}
+		}
+
 		protected override string DetermineTypeOutput(CodeTypeReference type)
 		{
 			switch (type.BaseType.ToLower(CultureInfo.InvariantCulture))
@@ -154,12 +231,16 @@ namespace Orvid.CodeDom.CodeGenerators
 				output.Write("new ");
 			}
 			// BUGFIX: This previously was not checked, producing a non-sealed class when
-			//         a sealed one was expected.
+			//         a sealed one was expected. The same goes for static.
 			bool wasFinal = false;
-			if ((declaration.Attributes & MemberAttributes.Final) == MemberAttributes.Final)
+			if ((declaration.Attributes & MemberAttributes.ScopeMask) == MemberAttributes.Final)
 			{
 				wasFinal = true;
 				output.Write("final ");
+			}
+			else if ((declaration.Attributes & MemberAttributes.ScopeMask) == MemberAttributes.Static)
+			{
+				output.Write("static ");
 			}
 			if (declaration.IsStruct)
 			{

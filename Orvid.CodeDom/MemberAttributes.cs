@@ -54,6 +54,9 @@ namespace Orvid.CodeDom
 		FamilyOrAssembly =	0x00004000, // protected internal
 		Private =		0x00005000, // private
 		Public =		0x00006000, // public
-		AccessMask =		0x0000F000
+		AccessMask =		0x0000F000,
+
+		Virtual =       0x00010000,
+		Sealed =        0x00020000,
 	}
 }
